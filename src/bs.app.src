@@ -1,0 +1,22 @@
+{application, bs, [
+	{pkg_name, "bs"},
+	{vsn, "1.0.0"},
+	{licenses, ["MIT"]},
+	{description, "Binary string functions."},
+	{links, [{"Github", "https://github.com/SirWumpus/erlang-bs"}]},
+	{applications, [
+		kernel,
+		stdlib
+	]},
+	{modules, [
+		str,
+		ctype
+	]},
+	{files, [
+		"README.md",
+		"makefile",
+		"rebar.config",
+		"src",
+		"test"
+	]}
+]}.
