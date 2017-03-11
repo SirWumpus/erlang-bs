@@ -49,7 +49,7 @@ True if the character is an alphabetic or numeric character.
 ### ctype:ispunct(Ch) -> boolean()
 True if the character is an punctuation character.
 
-### str:at(Bs, Index) -> Byte() | badarg
+### str:at(Bs, Index) -> byte() | badarg
 Return the character/byte at the given index in the binary string.
 
 ### str:cat(Bs1, Bs2) -> Bs
