@@ -1,6 +1,6 @@
 {application, ebs, [
 	{pkg_name, "ebs"},
-	{vsn, "1.0.1"},
+	{vsn, "1.0.2"},
 	{licenses, ["MIT"]},
 	{description, "C-like string and ctype functions for Erlang binary strings."},
 	{links, [{"Github", "https://github.com/SirWumpus/erlang-bs"}]},
