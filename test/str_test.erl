@@ -190,3 +190,8 @@ ncpy_test_() ->
 	?_assertMatch(<<"ABC">>, str:ncpy(<<"ABC">>, 4))
 	].
 
+error_test_() ->
+	[
+	?_assertMatch(<<"No such file or directory.">>, str:error(enoent)),
+	?_assertMatch(<<"Invalid argument.">>, str:error(einval))
+	].

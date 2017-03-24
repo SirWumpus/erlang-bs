@@ -70,6 +70,9 @@ Return a copy of Bs.  Alias for `binary:copy/1`.
 ### str:cspn(Bs, Delims) -> Length
 Return the number of leading characters in the binary string before any of the delimiters are found.
 
+### str:error(Reason) -> Bs
+Return binary string error message for Reason.
+
 ### str:len(Bs) -> Length
 Length of binary string.  Alias for `byte_size/1`.
 

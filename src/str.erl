@@ -1,7 +1,8 @@
 -module(str).
+-compile({no_auto_import,[error/1]}).
 -export([
-	at/2, cat/2, ncat/3, cmp/2, ncmp/3, cpy/1, ncpy/2, chr/2, rchr/2, len/1,
-	rev/1, chop/1, rchop/1, trim/1, spn/2, cspn/2, sub/2, sub/3, tok/2
+	at/2, cat/2, ncat/3, cmp/2, ncmp/3, cpy/1, ncpy/2, chr/2, rchr/2, error/1,
+	len/1, rev/1, chop/1, rchop/1, trim/1, spn/2, cspn/2, sub/2, sub/3, tok/2
 ]).
 
 len(Bs) ->
@@ -148,3 +149,104 @@ ncpy(<<>>, _, Acc) ->
 	Acc;
 ncpy(<<Ch:8, Rest/binary>>, Length, Acc) ->
 	ncpy(Rest, Length-1, <<Acc/binary, Ch:8>>).
+
+error(Reason) ->
+	%% Taken from NetBSD 7.1 man error; assumes Erlang uses errno names.
+	case Reason of
+	eperm -> <<"Operation not permitted.">>;
+	enoent -> <<"No such file or directory.">>;
+	esrch -> <<"No such process.">>;
+	eintr -> <<"Interrupted function call.">>;
+	eio -> <<"Input/output error.">>;
+	enxio -> <<"Device not configured.">>;
+	enoexec -> <<"Exec format error.">>;
+	ebadf -> <<"Bad file descriptor.">>;
+	echild -> <<"No child processes.">>;
+	edeadlk -> <<"Resource deadlock avoided.">>;
+	enomem -> <<"Cannot allocate memory.">>;
+	eacces -> <<"Permission denied.">>;
+	efault -> <<"Bad address.">>;
+	enotblk -> <<"Block device required.">>;
+	ebusy -> <<"Resource busy.">>;
+	eexist -> <<"File exists.">>;
+	exdev -> <<"Improper link.">>;
+	enodev -> <<"Operation not supported by device.">>;
+	enotdir -> <<"Not a directory.">>;
+	eisdir -> <<"Is a directory.">>;
+	einval -> <<"Invalid argument.">>;
+	enfile -> <<"Too many open files in system.">>;
+	emfile -> <<"Too many open files.">>;
+	enotty -> <<"Inappropriate ioctl for device.">>;
+	etxtbsy -> <<"Text file busy.">>;
+	efbig -> <<"File too large.">>;
+	enospc -> <<"Device out of space.">>;
+	espipe -> <<"Illegal seek.">>;
+	erofs -> <<"Read-only file system.">>;
+	emlink -> <<"Too many links.">>;
+	epipe -> <<"Broken pipe.">>;
+	edom -> <<"Numerical argument out of domain.">>;
+	erange -> <<"Result too large or too small.">>;
+	eagain -> <<"Resource temporarily unavailable.">>;
+	einprogress -> <<"Operation now in progress.">>;
+	ealready -> <<"Operation already in progress.">>;
+	enotsock -> <<"Socket operation on non-socket.">>;
+	edestaddrreq -> <<"Destination address required.">>;
+	emsgsize -> <<"Message too long.">>;
+	eprototype -> <<"Protocol wrong type for socket.">>;
+	enoprotoopt -> <<"Protocol option not available.">>;
+	eprotonosupport -> <<"Protocol not supported.">>;
+	esocktnosupport -> <<"Socket type not supported.">>;
+	eopnotsupp -> <<"Operation not supported.">>;
+	epfnosupport -> <<"Protocol family not supported.">>;
+	eafnosupport -> <<"Address family not supported by protocol family.">>;
+	eaddrinuse -> <<"Address already in use.">>;
+	eaddrnotavail -> <<"Cannot assign requested address.">>;
+	enetdown -> <<"Network is down.">>;
+	enetunreach -> <<"Network is unreachable.">>;
+	enetreset -> <<"Network dropped connection on reset.">>;
+	econnaborted -> <<"Software caused connection abort.">>;
+	econnreset -> <<"Connection reset by peer.">>;
+	enobufs -> <<"No buffer space available.">>;
+	eisconn -> <<"Socket is already connected.">>;
+	enotconn -> <<"Socket is not connected.">>;
+	eshutdown -> <<"Cannot send after socket shutdown.">>;
+	etoomanyrefs -> <<"Too many references: can't splice.">>;
+	etimedout -> <<"Operation timed out.">>;
+	econnrefused -> <<"Connection refused.">>;
+	eloop -> <<"Too many levels of symbolic links.">>;
+	enametoolong -> <<"File name too long.">>;
+	ehostdown -> <<"Host is down.">>;
+	ehostunreach -> <<"No route to host.">>;
+	enotempty -> <<"Directory not empty.">>;
+	eproclim -> <<"Too many processes.">>;
+	eusers -> <<"Too many users.">>;
+	edquot -> <<"Disc quota exceeded.">>;
+	estale -> <<"Stale NFS file handle.">>;
+	eremote -> <<"Too many levels of remote in path.">>;
+	ebadrpc -> <<"RPC struct is bad.">>;
+	erpcmismatch -> <<"RPC version wrong.">>;
+	eprogunavail -> <<"RPC prog.">>;
+	eprogmismatch -> <<"Program version wrong.">>;
+	eprocunavail -> <<"Bad procedure for program.">>;
+	enolck -> <<"No locks available.">>;
+	enosys -> <<"Function not implemented.">>;
+	eftype -> <<"Inappropriate file type or format.">>;
+	eauth -> <<"Authentication error.">>;
+	eneedauth -> <<"Need authenticator.">>;
+	eidrm -> <<"Identifier removed.">>;
+	enomsg -> <<"No message of the desired type.">>;
+	eoverflow -> <<"Value too large to be stored in data type.">>;
+	eilseq -> <<"Illegal byte sequence.">>;
+	enotsup -> <<"Not supported.">>;
+	ecanceled -> <<"Operation canceled.">>;
+	ebadmsg -> <<"Bad or corrupt message.">>;
+	enodata -> <<"No message available.">>;
+	enosr -> <<"No STREAM resources.">>;
+	enostr -> <<"Not a STREAM.">>;
+	etime -> <<"STREAM ioctl timeout.">>;
+	enoattr -> <<"Attribute not found.">>;
+	emultihop -> <<"Multihop attempted.">>;
+	enolink -> <<"Link has been severed.">>;
+	eproto -> <<"Protocol error.">>;
+	Reason -> Reason
+	end.
