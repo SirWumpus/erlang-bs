@@ -248,5 +248,5 @@ error(Reason) ->
 	emultihop -> <<"Multihop attempted.">>;
 	enolink -> <<"Link has been severed.">>;
 	eproto -> <<"Protocol error.">>;
-	Reason -> Reason
+	Reason -> atom_to_binary(Reason, utf8)
 	end.
