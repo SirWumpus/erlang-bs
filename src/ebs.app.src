@@ -1,22 +1,9 @@
-{application, ebs, [
-	{pkg_name, "ebs"},
-	{vsn, "1.0.3"},
-	{licenses, ["MIT"]},
-	{description, "C-like string and ctype functions for Erlang binary strings."},
-	{links, [{"Github", "https://github.com/SirWumpus/erlang-bs"}]},
-	{applications, [
-		kernel,
-		stdlib
-	]},
-	{modules, [
-		str,
-		ctype
-	]},
-	{files, [
-		"README.md",
-		"makefile",
-		"rebar.config",
-		"src",
-		"test"
-	]}
-]}.
+{application,ebs,
+             [{pkg_name,"ebs"},
+              {vsn,"1.0.3"},
+              {licenses,["MIT"]},
+              {description,"C-like string and ctype functions for Erlang binary strings."},
+              {links,[{"Github","https://github.com/SirWumpus/erlang-bs"}]},
+              {applications,[kernel,stdlib]},
+              {modules,[str,ctype]},
+              {files,["README.md","makefile","rebar.config","src","test"]}]}.
