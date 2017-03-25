@@ -21,7 +21,7 @@ clean:
 	-rm -rf src/*$B *dump
 
 distclean: clean
-	-rm -rf _build
+	-rm -rf _build ebin
 
 tar:
 	git archive --format tar.gz --prefix ${PROJ}/ -o ${PROJ}.tar.gz HEAD
