@@ -70,20 +70,20 @@ rev_test_() ->
 	].
 
 
-chop_test_() ->
+ltrim_test_() ->
 	[
-	?_assertMatch(<<>>, str:chop(<<"">>)),
-	?_assertMatch(<<"ABC">>, str:chop(<<"ABC">>)),
-	?_assertMatch(<<"ABC   ">>, str:chop(<<"   ABC   ">>)),
-	?_assertMatch(<<"ABC  1 2 3   ">>, str:chop(<<"   ABC  1 2 3   ">>))
+	?_assertMatch(<<>>, str:ltrim(<<"">>)),
+	?_assertMatch(<<"ABC">>, str:ltrim(<<"ABC">>)),
+	?_assertMatch(<<"ABC   ">>, str:ltrim(<<"   ABC   ">>)),
+	?_assertMatch(<<"ABC  1 2 3   ">>, str:ltrim(<<"   ABC  1 2 3   ">>))
 	].
 
-rchop_test_() ->
+rtrim_test_() ->
 	[
-	?_assertMatch(<<>>, str:rchop(<<"">>)),
-	?_assertMatch(<<"ABC">>, str:rchop(<<"ABC">>)),
-	?_assertMatch(<<"   ABC">>, str:rchop(<<"   ABC   ">>)),
-	?_assertMatch(<<"   ABC  1 2 3">>, str:rchop(<<"   ABC  1 2 3   ">>))
+	?_assertMatch(<<>>, str:rtrim(<<"">>)),
+	?_assertMatch(<<"ABC">>, str:rtrim(<<"ABC">>)),
+	?_assertMatch(<<"   ABC">>, str:rtrim(<<"   ABC   ">>)),
+	?_assertMatch(<<"   ABC  1 2 3">>, str:rtrim(<<"   ABC  1 2 3   ">>))
 	].
 
 trim_test_() ->
@@ -197,4 +197,42 @@ error_test_() ->
 	?_assertMatch(<<"No such file or directory.">>, str:error(enoent)),
 	?_assertMatch(<<"Invalid argument.">>, str:error(einval)),
 	?_assertMatch(<<"exyzzy">>, str:error(exyzzy))
+	].
+
+casecmp_test_() ->
+	[
+	?_assertMatch( 0, str:casecmp(<<>>, <<>>)),
+	?_assertMatch( 0, str:casecmp(<<"A">>, <<"a">>)),
+	?_assertMatch( 0, str:casecmp(<<"Ab">>, <<"aB">>)),
+	?_assertMatch( 0, str:casecmp(<<"aBc">>, <<"AbC">>)),
+	?_assertMatch(-1, str:casecmp(<<"A">>, <<"b">>)),
+	?_assertMatch( 1, str:casecmp(<<"b">>, <<"A">>)),
+	?_assertMatch(-1, str:casecmp(<<"A">>, <<"aB">>)),
+	?_assertMatch( 1, str:casecmp(<<"aB">>, <<"A">>))
+	].
+
+ncasecmp_test_() ->
+	[
+	?_assertMatch( 0, str:ncasecmp(<<>>, <<>>, 0)),
+	?_assertMatch( 0, str:ncasecmp(<<>>, <<>>, 1)),
+	?_assertMatch( 0, str:ncasecmp(<<"a">>, <<"A">>, 0)),
+	?_assertMatch( 0, str:ncasecmp(<<"a">>, <<"A">>, 1)),
+	?_assertMatch( 0, str:ncasecmp(<<"a">>, <<"A">>, 2)),
+	?_assertMatch( 0, str:ncasecmp(<<"Ab">>, <<"aB">>, 0)),
+	?_assertMatch( 0, str:ncasecmp(<<"Ab">>, <<"aB">>, 1)),
+	?_assertMatch( 0, str:ncasecmp(<<"Ab">>, <<"aB">>, 2)),
+	?_assertMatch( 0, str:ncasecmp(<<"Ab">>, <<"aB">>, 3)),
+	?_assertMatch( 0, str:ncasecmp(<<"AbC">>, <<"aBc">>, 0)),
+	?_assertMatch( 0, str:ncasecmp(<<"AbC">>, <<"aBc">>, 1)),
+	?_assertMatch( 0, str:ncasecmp(<<"AbC">>, <<"aBc">>, 2)),
+	?_assertMatch( 0, str:ncasecmp(<<"AbC">>, <<"aBc">>, 3)),
+	?_assertMatch( 0, str:ncasecmp(<<"AbC">>, <<"aBc">>, 4)),
+	?_assertMatch(-1, str:ncasecmp(<<"A">>, <<"B">>, 1)),
+	?_assertMatch( 1, str:ncasecmp(<<"B">>, <<"A">>, 1)),
+	?_assertMatch( 0, str:ncasecmp(<<"A">>, <<"aB">>, 0)),
+	?_assertMatch( 0, str:ncasecmp(<<"A">>, <<"aB">>, 1)),
+	?_assertMatch(-1, str:ncasecmp(<<"A">>, <<"aB">>, 2)),
+	?_assertMatch( 0, str:ncasecmp(<<"aB">>, <<"A">>, 0)),
+	?_assertMatch( 0, str:ncasecmp(<<"aB">>, <<"A">>, 1)),
+	?_assertMatch( 1, str:ncasecmp(<<"aB">>, <<"A">>, 2))
 	].

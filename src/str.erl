@@ -2,7 +2,8 @@
 -compile({no_auto_import,[error/1]}).
 -export([
 	at/2, cat/2, ncat/3, cmp/2, ncmp/3, cpy/1, ncpy/2, chr/2, rchr/2, error/1,
-	len/1, rev/1, chop/1, rchop/1, trim/1, spn/2, cspn/2, sub/2, sub/3, tok/2
+	len/1, rev/1, ltrim/1, rtrim/1, trim/1, spn/2, cspn/2, sub/2, sub/3, tok/2,
+	casecmp/2, ncasecmp/3
 ]).
 
 len(Bs) ->
@@ -56,20 +57,20 @@ rev(<<>>, Acc) ->
 rev(<<Ch:8, Rest/binary>>, Acc) ->
 	rev(Rest, <<Ch, Acc/binary>>).
 
-chop(<<>>) ->
+ltrim(<<>>) ->
 	<<>>;
-chop(<<Ch:8, Rest/binary>>) when Ch == 32 orelse (9 =< Ch andalso Ch =< 13) ->
-	chop(Rest);
-chop(Rest) ->
+ltrim(<<Ch:8, Rest/binary>>) when Ch == 32 orelse (9 =< Ch andalso Ch =< 13) ->
+	ltrim(Rest);
+ltrim(Rest) ->
 	Rest.
 
-rchop(<<>>) ->
+rtrim(<<>>) ->
 	<<>>;
-rchop(<<Bs/binary>>) ->
-	rev(chop(rev(Bs))).
+rtrim(<<Bs/binary>>) ->
+	rev(ltrim(rev(Bs))).
 
 trim(<<Bs/binary>>) ->
-	chop(rchop(Bs)).
+	ltrim(rtrim(Bs)).
 
 spn(<<Bs/binary>>, Delims) ->
 	spn(Bs, Delims, 0).
@@ -137,6 +138,29 @@ ncmp(<<Ach:8, A/binary>>, <<Bch:8, B/binary>>, Length) ->
 
 cmp(A, B) ->
 	ncmp(A, B, max(byte_size(A), byte_size(B))).
+
+ncasecmp(_A, _B, 0) ->
+	0;
+ncasecmp(<<>>, <<>>, _Length) ->
+	0;
+ncasecmp(<<_Ach:8, _/binary>>, <<>>, _Length) ->
+	1;
+ncasecmp(<<>>, <<_Bch:8, _/binary>>, _Length) ->
+	-1;
+ncasecmp(<<Ach:8, A/binary>>, <<Bch:8, B/binary>>, Length) ->
+	UpperA = ctype:toupper(Ach),
+	UpperB = ctype:toupper(Bch),
+	if
+		UpperA =:= UpperB ->
+			ncasecmp(A, B, Length-1);
+		UpperA < UpperB ->
+			-1;
+		UpperA > UpperB ->
+			1
+	end.
+
+casecmp(A, B) ->
+	ncasecmp(A, B, max(byte_size(A), byte_size(B))).
 
 cpy(Bs) ->
 	binary:copy(Bs).
