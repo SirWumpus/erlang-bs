@@ -1,9 +1,13 @@
 -module(ctype).
 -export([
 	isblank/1, isspace/1, isprint/1, isdigit/1, isxdigit/1,
-        iscntrl/1, isalpha/1, isalnum/1, isupper/1, islower/1, ispunct/1
+        iscntrl/1, isalpha/1, isalnum/1, isupper/1, islower/1, ispunct/1,
+        tolower/1, toupper/1
 ]).
 
+%%
+%% These functions assume ASCII.
+%%
 
 isblank(Ch) ->
 	Ch =:= 32 orelse Ch =:= 9.
@@ -37,3 +41,19 @@ isalnum(Ch) ->
 
 ispunct(Ch) ->
 	32 < Ch andalso Ch < 127 andalso not isalnum(Ch).
+
+tolower(Ch) ->
+	case isupper(Ch) of
+	true ->
+		Ch + 16#20;
+	false ->
+		Ch
+	end.
+
+toupper(Ch) ->
+	case islower(Ch) of
+	true ->
+		Ch - 16#20;
+	false ->
+		Ch
+	end.

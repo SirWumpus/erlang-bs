@@ -232,3 +232,55 @@ ispunct_test_() ->
 	?_assertMatch(true, ctype:ispunct($[)),
 	?_assertMatch(true, ctype:ispunct($]))
 	].
+
+tolower_test_() ->
+	[
+	?_assertMatch(0, ctype:tolower(0)),
+	?_assertMatch(1, ctype:tolower(1)),
+	?_assertMatch(2, ctype:tolower(2)),
+	?_assertMatch($\b, ctype:tolower($\b)),
+	?_assertMatch($\t, ctype:tolower($\t)),
+	?_assertMatch($\n, ctype:tolower($\n)),
+	?_assertMatch($\r, ctype:tolower($\r)),
+	?_assertMatch(16#1B, ctype:tolower(16#1B)),
+	?_assertMatch(127, ctype:tolower(127)),
+	?_assertMatch($ , ctype:tolower($ )),
+	?_assertMatch($-, ctype:tolower($-)),
+	?_assertMatch($., ctype:tolower($.)),
+	?_assertMatch($1, ctype:tolower($1)),
+	?_assertMatch($9, ctype:tolower($9)),
+	?_assertMatch($@, ctype:tolower($@)),
+	?_assertMatch($a, ctype:tolower($A)),
+	?_assertMatch($z, ctype:tolower($Z)),
+	?_assertMatch($_, ctype:tolower($_)),
+	?_assertMatch($a, ctype:tolower($a)),
+	?_assertMatch($z, ctype:tolower($z)),
+	?_assertMatch($[, ctype:tolower($[)),
+	?_assertMatch($], ctype:tolower($]))
+	].
+
+toupper_test_() ->
+	[
+	?_assertMatch(0, ctype:toupper(0)),
+	?_assertMatch(1, ctype:toupper(1)),
+	?_assertMatch(2, ctype:toupper(2)),
+	?_assertMatch($\b, ctype:toupper($\b)),
+	?_assertMatch($\t, ctype:toupper($\t)),
+	?_assertMatch($\n, ctype:toupper($\n)),
+	?_assertMatch($\r, ctype:toupper($\r)),
+	?_assertMatch(16#1B, ctype:toupper(16#1B)),
+	?_assertMatch(127, ctype:toupper(127)),
+	?_assertMatch($ , ctype:toupper($ )),
+	?_assertMatch($-, ctype:toupper($-)),
+	?_assertMatch($., ctype:toupper($.)),
+	?_assertMatch($1, ctype:toupper($1)),
+	?_assertMatch($9, ctype:toupper($9)),
+	?_assertMatch($@, ctype:toupper($@)),
+	?_assertMatch($A, ctype:toupper($A)),
+	?_assertMatch($Z, ctype:toupper($Z)),
+	?_assertMatch($_, ctype:toupper($_)),
+	?_assertMatch($A, ctype:toupper($a)),
+	?_assertMatch($Z, ctype:toupper($z)),
+	?_assertMatch($[, ctype:toupper($[)),
+	?_assertMatch($], ctype:toupper($]))
+	].
