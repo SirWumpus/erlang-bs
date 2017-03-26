@@ -88,17 +88,17 @@ Remove leading whitespace from a binary string.
 ### str:ncasecmp(Bs1, Bs2, Length) -> integer() 
 Return an integer greater than, equal to, or less than 0 according to whether caseless binary string Bs1 is greater than, equal to, or less than caseless binary string Bs2, comparing at most Length octets.
 
-### str:ncmp(Bs1, Bs2, Length) -> integer() 
-Return an integer greater than, equal to, or less than 0 according to whether binary string Bs1 is greater than, equal to, or less than binary string Bs2, comparing at most Length octets.
-
 ### str:ncat(Bs1, Bs2, Length) -> Bs
 Append Length characters from Bs2 to Bs1.
 
-### str:ncpy(Bs, Length) -> Bs
-Return a copy of the first Length octets of Bs. 
+### str:ncmp(Bs1, Bs2, Length) -> integer()
+Return an integer greater than, equal to, or less than 0 according to whether binary string Bs1 is greater than, equal to, or less than binary string Bs2, comparing at most Length octets.
 
 ### str:rchr(Bs, Ch) ->  Index | -1
 Return index of last occurrence of character in the binary string; otherwise -1 if not found.
+
+### str:ncpy(Bs, Length) -> Bs
+Return a copy of the first Length octets of Bs. 
 
 ### str:rev(Bs) -> Bs
 Reverse the binary string.
