@@ -236,3 +236,15 @@ ncasecmp_test_() ->
 	?_assertMatch( 0, str:ncasecmp(<<"aB">>, <<"A">>, 1)),
 	?_assertMatch( 1, str:ncasecmp(<<"aB">>, <<"A">>, 2))
 	].
+
+lower_test_() ->
+	[
+	?_assertMatch(<<>>, str:lower(<<"">>)),
+	?_assertMatch(<<"abcde[123]">>, str:lower(<<"AbCdE[123]">>))
+	].
+
+upper_test_() ->
+	[
+	?_assertMatch(<<>>, str:lower(<<"">>)),
+	?_assertMatch(<<"ABCDE[123]">>, str:upper(<<"AbCdE[123]">>))
+	].

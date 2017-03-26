@@ -3,7 +3,7 @@
 -export([
 	at/2, cat/2, ncat/3, cmp/2, ncmp/3, cpy/1, ncpy/2, chr/2, rchr/2, error/1,
 	len/1, rev/1, ltrim/1, rtrim/1, trim/1, spn/2, cspn/2, sub/2, sub/3, tok/2,
-	casecmp/2, ncasecmp/3
+	casecmp/2, ncasecmp/3, lower/1, upper/1
 ]).
 
 len(Bs) ->
@@ -173,6 +173,20 @@ ncpy(<<>>, _, Acc) ->
 	Acc;
 ncpy(<<Ch:8, Rest/binary>>, Length, Acc) ->
 	ncpy(Rest, Length-1, <<Acc/binary, Ch:8>>).
+
+upper(Bs) ->
+	upper(Bs, <<>>).
+upper(<<>>, Acc) ->
+	Acc;
+upper(<<Octet:8, Rest/binary>>, Acc) ->
+	upper(Rest, <<Acc/binary, (ctype:toupper(Octet)):8>>).
+
+lower(Bs) ->
+	lower(Bs, <<>>).
+lower(<<>>, Acc) ->
+	Acc;
+lower(<<Octet:8, Rest/binary>>, Acc) ->
+	lower(Rest, <<Acc/binary, (ctype:tolower(Octet)):8>>).
 
 error(Reason) ->
 	%% Taken from NetBSD 7.1 man error; assumes Erlang uses errno names.

@@ -85,6 +85,9 @@ Length of binary string.  Alias for `byte_size/1`.
 ### str:ltrim(Bs) -> Bs
 Remove leading whitespace from a binary string.
 
+### str:lower(Bs) -> Bs
+Return a binary string converted to lower case.
+
 ### str:ncasecmp(Bs1, Bs2, Length) -> integer() 
 Return an integer greater than, equal to, or less than 0 according to whether caseless binary string Bs1 is greater than, equal to, or less than caseless binary string Bs2, comparing at most Length octets.
 
@@ -120,6 +123,9 @@ Return a tuple of the first token separated by one or more delimiters and the re
 
 ### str:trim(Bs) -> Bs
 Remove leading and trailing whitespace from a binary string.
+
+### str:upper(Bs) -> Bs
+Return a binary string converted to upper case.
 
 
 Copyright
