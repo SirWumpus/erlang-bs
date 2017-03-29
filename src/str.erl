@@ -1,9 +1,10 @@
 -module(str).
 -compile({no_auto_import,[error/1]}).
 -export([
-	at/2, cat/2, ncat/3, cmp/2, ncmp/3, cpy/1, ncpy/2, chr/2, rchr/2, error/1,
-	len/1, rev/1, ltrim/1, rtrim/1, trim/1, spn/2, cspn/2, sub/2, sub/3, tok/2,
-	casecmp/2, ncasecmp/3, lower/1, upper/1
+	at/2, cat/2, ncat/3, cmp/2, ncmp/3, cpy/1, ncpy/2, chr/2, rchr/2,
+	error/1, len/1, rev/1, ltrim/1, rtrim/1, trim/1, spn/2, cspn/2, sub/2,
+	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
+	ftime/2, lpad/3, rpad/3
 ]).
 
 len(Bs) ->
@@ -188,6 +189,7 @@ lower(<<>>, Acc) ->
 lower(<<Octet:8, Rest/binary>>, Acc) ->
 	lower(Rest, <<Acc/binary, (ctype:tolower(Octet)):8>>).
 
+
 error(Reason) ->
 	%% Taken from NetBSD 7.1 man error; assumes Erlang uses errno names.
 	case Reason of
@@ -288,3 +290,174 @@ error(Reason) ->
 	eproto -> <<"Protocol error.">>;
 	Reason -> atom_to_binary(Reason, utf8)
 	end.
+
+tr(Bs, FromSet) ->
+	tr(Bs, FromSet, <<>>).
+tr(Bs, <<>>, _ToSet) ->
+	Bs;
+tr(Bs, FromSet, ToSet) ->
+	tr(Bs, FromSet, ToSet, <<>>).
+tr(<<>>, _FromSet, _ToSet, Acc) ->
+	Acc;
+tr(<<Ch:8, Rest/binary>>, FromSet, ToSet, Acc) ->
+	ToLen = byte_size(ToSet),
+	case chr(FromSet, Ch) of
+	-1 ->
+		tr(Rest, FromSet, ToSet, <<Acc/binary, Ch:8>>);
+	_Index when ToLen == 0 ->
+		tr(Rest, FromSet, ToSet, Acc);
+	Index when ToLen =< Index ->
+		Last = binary:last(ToSet),
+		tr(Rest, FromSet, ToSet, <<Acc/binary, Last:8>>);
+	Index ->
+		Replace = binary:at(ToSet, Index),
+		tr(Rest, FromSet, ToSet, <<Acc/binary, Replace:8>>)
+	end.
+
+-define(WEEK_DAYS_FULL, {<<"Monday">>,<<"Tuesday">>,<<"Wednesday">>,<<"Thursday">>,<<"Friday">>,<<"Saturday">>,<<"Sunday">>}).
+-define(WEEK_DAYS_SHORT, {<<"Mon">>,<<"Tue">>,<<"Wed">>,<<"Thu">>,<<"Fri">>,<<"Sat">>,<<"Sun">>}).
+-define(MONTH_FULL, {<<"January">>,<<"February">>,<<"March">>,<<"April">>,<<"May">>,<<"June">>,<<"July">>,<<"August">>,<<"September">>,<<"October">>,<<"November">>,<<"December">>}).
+-define(MONTH_SHORT, {<<"Jan">>,<<"Feb">>,<<"Mar">>,<<"Apr">>,<<"May">>,<<"Jun">>,<<"Jul">>,<<"Aug">>,<<"Sep">>,<<"Oct">>,<<"Nov">>,<<"Dec">>}).
+
+ftime(Fmt, {Date, Time}) ->
+	ftime(Fmt, {Date, Time}, <<>>).
+ftime(<<>>, _DateTime, Acc) ->
+	Acc;
+ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time}, Acc) ->
+	{Year, Month, Day} = Date,
+	{Hour, Min, Sec} = Time,
+
+	NewAcc = case Ch of
+	$A ->
+		FullDay = element(calendar:day_of_the_week(Date), ?WEEK_DAYS_FULL),
+		<<Acc/binary, FullDay/binary>>;
+	$a ->
+		ShortDay = element(calendar:day_of_the_week(Date), ?WEEK_DAYS_SHORT),
+		<<Acc/binary, ShortDay/binary>>;
+	$B ->
+		FullMonth = element(Month, ?MONTH_FULL),
+		<<Acc/binary, FullMonth/binary>>;
+	$b ->
+		ShortMonth = element(Month, ?MONTH_SHORT),
+		<<Acc/binary, ShortMonth/binary>>;
+	$h ->
+		ShortMonth = element(Month, ?MONTH_SHORT),
+		<<Acc/binary, ShortMonth/binary>>;
+	$C ->
+		Century = pad_int_to_bin(Year div 100, $0, 2),
+		<<Acc/binary, Century/binary>>;
+	$c ->
+		Cdate = ftime(<<"%e %b %Y %H:%M:%S">>, {Date, Time}),
+		<<Acc/binary, Cdate/binary>>;
+	$D ->
+		UsDate = ftime(<<"%m/%d/%y">>, {Date, Time}),
+		<<Acc/binary, UsDate/binary>>;
+	$d ->
+		Dday = pad_int_to_bin(Day, $0, 2),
+		<<Acc/binary, Dday/binary>>;
+	$e ->
+		Eday = integer_to_binary(Day),
+		<<Acc/binary, Eday/binary>>;
+	$F ->
+		IsoDate = ftime(<<"%Y-%m-%d">>, {Date, Time}),
+		<<Acc/binary, IsoDate/binary>>;
+	$G ->
+		throw({error, 'not implemented'});
+	$g ->
+		throw({error, 'not implemented'});
+	$H ->
+		Hr = pad_int_to_bin(Hour, $0, 2),
+		<<Acc/binary, Hr/binary>>;
+	$I ->
+		Hr12 = pad_int_to_bin(Hour rem 12, $0, 2),
+		<<Acc/binary, Hr12/binary>>;
+	$j ->
+		Yday = calendar:date_to_gregorian_days(Date) - calendar:date_to_gregorian_days(Year, 1, 1) + 1,
+		DecDayOfYear = pad_int_to_bin(Yday, $0, 3),
+		<<Acc/binary, DecDayOfYear/binary>>;
+	$k ->
+		SpcHr = pad_int_to_bin(Hour, $ , 2),
+		<<Acc/binary, SpcHr/binary>>;
+	$l ->
+		SpcHr12 = pad_int_to_bin(Hour rem 12, $ , 2),
+		<<Acc/binary, SpcHr12/binary>>;
+	$M ->
+		Mn = pad_int_to_bin(Min, $0, 2),
+		<<Acc/binary, Mn/binary>>;
+	$m ->
+		Mon = pad_int_to_bin(Month, $0, 2),
+		<<Acc/binary, Mon/binary>>;
+	$n ->
+		<<Acc/binary, $\n>>;
+	$p ->
+		if
+		Hour < 12 ->
+			<<Acc/binary, "am">>;
+		Hour >= 12 ->
+			<<Acc/binary, "pm">>
+		end;
+	$R ->
+		HrMn = ftime(<<"%H:%M">>, {Date, Time}),
+		<<Acc/binary, HrMn/binary>>;
+	$r ->
+		HrMn12 = ftime(<<"%I:%M %p">>, {Date, Time}),
+		<<Acc/binary, HrMn12/binary>>;
+	$S ->
+		Seconds = pad_int_to_bin(Sec, $0, 2),
+		<<Acc/binary, Seconds/binary>>;
+	$s ->
+		throw({error, 'not implemented'});
+	$T ->
+		IsoTime = ftime(<<"%H:%M:%S">>, {Date, Time}),
+		<<Acc/binary, IsoTime/binary>>;
+	$t ->
+		<<Acc/binary, $\t>>;
+	$U ->
+		throw({error, 'not implemented'});
+	$u ->
+		throw({error, 'not implemented'});
+	$V ->
+		Week = pad_int_to_bin(calendar:iso_week_number(Date), $0, 2),
+		<<Acc/binary, Week/binary>>;
+	$v ->
+		Vdate = ftime(<<"%e-%b-%Y">>, {Date, Time}),
+		<<Acc/binary, Vdate/binary>>;
+	$W ->
+		throw({error, 'not implemented'});
+	$w ->
+		throw({error, 'not implemented'});
+	$X ->
+		throw({error, 'not implemented'});
+	$x ->
+		throw({error, 'not implemented'});
+	$Y ->
+		FullYr = pad_int_to_bin(Year, $0, 4),
+		<<Acc/binary, FullYr/binary>>;
+	$y ->
+		ShortYr = pad_int_to_bin(Year rem 100, $0, 2),
+		<<Acc/binary, ShortYr/binary>>;
+	$Z ->
+		throw({error, 'not implemented'});
+	$z ->
+		throw({error, 'not implemented'});
+	$% ->
+		<<Acc/binary, $%>>;
+	_ ->
+		throw({error, einval})
+	end,
+	ftime(Rest, {Date, Time}, NewAcc);
+ftime(<<Ch:8, Rest/binary>>, DateTime, Acc) ->
+	ftime(Rest, DateTime, <<Acc/binary, Ch:8>>).
+
+lpad(Bs, _Pad, Width) when Width =< byte_size(Bs) ->
+	Bs;
+lpad(Bs, Pad, Width) ->
+	lpad(<<Pad:8, Bs/binary>>, Pad, Width).
+
+rpad(Bs, _Pad, Width) when Width =< byte_size(Bs) ->
+	Bs;
+rpad(Bs, Pad, Width) ->
+	rpad(<<Bs/binary, Pad:8>>, Pad, Width).
+
+pad_int_to_bin(Int, Pad, Width) ->
+	lpad(integer_to_binary(Int), Pad, Width).

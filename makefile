@@ -18,7 +18,7 @@ all:
 	rebar3 compile
 
 clean:
-	-rm -rf src/*$B *dump
+	-rm -rf src/*$B *dump *.core
 
 distclean: clean
 	-rm -rf _build ebin

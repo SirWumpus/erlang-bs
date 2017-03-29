@@ -12,6 +12,9 @@ Data Types
 * Delims = <<"...">>
 * Index = integer() >= 0
 * Length = integer() >= 0
+* Date = { Year, Month, Day }
+* Time = { Hour, Minute, Second }
+
 
 Exports
 -------
@@ -79,8 +82,14 @@ Return the number of leading characters in the binary string before any of the d
 ### str:error(Reason) -> Bs
 Return binary string error message for Reason.
 
+### str:ftime(Fmt, {Date, Time}) -> Bs
+
+
 ### str:len(Bs) -> Length
 Length of binary string.  Alias for `byte_size/1`.
+
+### str:lpad(Bs, Pad, Width) -> Bs
+Return Bs padded with Pad characters to the left until at least Width.
 
 ### str:ltrim(Bs) -> Bs
 Remove leading whitespace from a binary string.
@@ -99,6 +108,9 @@ Return an integer greater than, equal to, or less than 0 according to whether bi
 
 ### str:rchr(Bs, Ch) ->  Index | -1
 Return index of last occurrence of character in the binary string; otherwise -1 if not found.
+
+### str:rpad(Bs, Pad, Width) -> Bs
+Return Bs padded with Pad characters to the right until at least Width.
 
 ### str:ncpy(Bs, Length) -> Bs
 Return a copy of the first Length octets of Bs. 
@@ -120,6 +132,10 @@ Return the binary substring between start and stop index, excluding stop.  The i
 
 ### str:tok(Bs, Delims) -> {<< Token >>, << Rest >>}
 Return a tuple of the first token separated by one or more delimiters and the remaing binary string.
+
+### str:tr(Bs, FromSet) -> Bs
+### str:tr(Bs, FromSet, ToSet) -> Bs
+For each character in Bs found at position N of FromSet (a binary string) is replaced by a character at position N of ToSet (a binary string); if ToSet is shorter than FromSet, then the last character of ToSet is used.  If ToSet is missing or empty, then characters in FromSet are deleted from Bs.
 
 ### str:trim(Bs) -> Bs
 Remove leading and trailing whitespace from a binary string.

@@ -248,3 +248,60 @@ upper_test_() ->
 	?_assertMatch(<<>>, str:lower(<<"">>)),
 	?_assertMatch(<<"ABCDE[123]">>, str:upper(<<"AbCdE[123]">>))
 	].
+
+lpad_test_() ->
+	[
+	?_assertMatch(<<>>, str:lpad(<<>>, $., 0)),
+	?_assertMatch(<<".">>, str:lpad(<<>>, $., 1)),
+	?_assertMatch(<<"..">>, str:lpad(<<>>, $., 2)),
+	?_assertMatch(<<"ABC">>, str:lpad(<<"ABC">>, $., 0)),
+	?_assertMatch(<<"ABC">>, str:lpad(<<"ABC">>, $., 1)),
+	?_assertMatch(<<"ABC">>, str:lpad(<<"ABC">>, $., 2)),
+	?_assertMatch(<<"ABC">>, str:lpad(<<"ABC">>, $., 3)),
+	?_assertMatch(<<".ABC">>, str:lpad(<<"ABC">>, $., 4)),
+	?_assertMatch(<<"..ABC">>, str:lpad(<<"ABC">>, $., 5))
+	].
+
+rpad_test_() ->
+	[
+	?_assertMatch(<<>>, str:rpad(<<>>, $., 0)),
+	?_assertMatch(<<".">>, str:rpad(<<>>, $., 1)),
+	?_assertMatch(<<"..">>, str:rpad(<<>>, $., 2)),
+	?_assertMatch(<<"ABC">>, str:rpad(<<"ABC">>, $., 0)),
+	?_assertMatch(<<"ABC">>, str:rpad(<<"ABC">>, $., 1)),
+	?_assertMatch(<<"ABC">>, str:rpad(<<"ABC">>, $., 2)),
+	?_assertMatch(<<"ABC">>, str:rpad(<<"ABC">>, $., 3)),
+	?_assertMatch(<<"ABC.">>, str:rpad(<<"ABC">>, $., 4)),
+	?_assertMatch(<<"ABC..">>, str:rpad(<<"ABC">>, $., 5))
+	].
+
+ftime_test_() ->
+	[
+	?_assertMatch(<<>>, str:ftime(<<>>, {{2017,4,1},{17,37,46}})),
+%	?_assertMatch({error, einval}, str:ftime(<<"bogus %@">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"Day of week Sat">>, str:ftime(<<"Day of week %a">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"Day of week Saturday">>, str:ftime(<<"Day of week %A">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"Full month April">>, str:ftime(<<"Full month %B">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"Short month Apr">>, str:ftime(<<"Short month %b">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"Century 20">>, str:ftime(<<"Century %C">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"Local date 1 Apr 2017 17:37:46">>, str:ftime(<<"Local date %c">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"American 04/01/17">>, str:ftime(<<"American %D">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"Padded day 01">>, str:ftime(<<"Padded day %d">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"Day 1">>, str:ftime(<<"Day %e">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"ISO Date 2017-04-01">>, str:ftime(<<"ISO Date %F">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"24-hour 17">>, str:ftime(<<"24-hour %H">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"12-hour 05">>, str:ftime(<<"12-hour %I">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"Day of year 091">>, str:ftime(<<"Day of year %j">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"\t%\n">>, str:ftime(<<"%t%%%n">>, {{2017,4,1},{17,37,46}}))
+	].
+
+tr_test_() ->
+	[
+	?_assertMatch(<<>>, str:tr(<<>>, <<".,;">>)),
+	?_assertMatch(<<>>, str:tr(<<>>, <<".,;">>, <<"123">>)),
+	?_assertMatch(<<"ABC">>, str:tr(<<"ABC">>, <<"">>, <<"123">>)),
+	?_assertMatch(<<"123231312">>, str:tr(<<"!@#@#!#!@">>, <<"!@#">>, <<"123">>)),
+	?_assertMatch(<<"1_2_3_">>, str:tr(<<"1!2@3#">>, <<"!@#">>, <<"_">>)),
+	?_assertMatch(<<"123">>, str:tr(<<"#1##2###3">>, <<"#">>, <<"">>))
+	].
+
