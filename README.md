@@ -148,6 +148,8 @@ Use binary string Fmt to format Date and Time into Bs.  All ordinary characters 
 
 **%r**	is replaced by the locale's representation of 12-hour clock time using AM/PM notation.
 
+**%s**	is replaced by the number of seconds since the Epoch.
+
 **%T**	is replaced by the time in the format ``%H:%M:%S''.
 
 **%t**	is replaced by a tab.

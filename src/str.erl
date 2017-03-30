@@ -406,7 +406,12 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time}, Acc) ->
 		Seconds = pad_int_to_bin(Sec, $0, 2),
 		<<Acc/binary, Seconds/binary>>;
 	$s ->
-		throw({error, 'not implemented'});
+		Yday = calendar:date_to_gregorian_days(Date) - calendar:date_to_gregorian_days(Year, 1, 1),
+		Epoch = Sec + Min * 60 + Hour * 3600
+			+ Yday * 86400 + (Year - 1970) * 31536000
+			+ ((Year - 1969) div 4) * 86400, %% - zone
+		EpochSec = integer_to_binary(Epoch),
+		<<Acc/binary, EpochSec/binary>>;
 	$T ->
 		IsoTime = ftime(<<"%H:%M:%S">>, {Date, Time}),
 		<<Acc/binary, IsoTime/binary>>;

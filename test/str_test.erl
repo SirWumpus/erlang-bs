@@ -292,6 +292,7 @@ ftime_test_() ->
 	?_assertMatch(<<"24-hour 17">>, str:ftime(<<"24-hour %H">>, {{2017,4,1},{17,37,46}})),
 	?_assertMatch(<<"12-hour 05">>, str:ftime(<<"12-hour %I">>, {{2017,4,1},{17,37,46}})),
 	?_assertMatch(<<"Day of year 091">>, str:ftime(<<"Day of year %j">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"Epoch 1491068266">>, str:ftime(<<"Epoch %s">>, {{2017,4,1},{17,37,46}})),
 	?_assertMatch(<<"\t%\n">>, str:ftime(<<"%t%%%n">>, {{2017,4,1},{17,37,46}}))
 	].
 
