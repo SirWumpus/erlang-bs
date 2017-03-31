@@ -21,7 +21,7 @@ clean:
 	-rm -rf src/*$B *dump *.core
 
 distclean: clean
-	-rm -rf _build ebin
+	-rm -rf _build _checkouts ebin
 
 tar:
 	git archive --format tar.gz --prefix ${PROJ}/ -o ${PROJ}.tar.gz HEAD
@@ -30,3 +30,7 @@ test: unit
 
 unit:
 	rebar3 eunit
+
+_checkouts:
+	mkdir _checkouts
+	-cd _checkouts; ln -s ../../rebar3_hex .
