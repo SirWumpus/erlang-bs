@@ -14,6 +14,7 @@ Data Types
 * Length = integer() >= 0
 * Date = { Year, Month, Day }
 * Time = { Hour, Minute, Second }
+* Tz = integer() ; time zone offset, eg. -500 = EST, -430 = Newfoundland
 
 
 Exports
@@ -104,7 +105,8 @@ Return binary string error message for Reason.
 
 - - -
 ### str:ftime(Fmt, {Date, Time}) -> Bs
-Use binary string Fmt to format Date and Time into Bs.  All ordinary characters are copied as-is, while the following format characters are replaced (similar to strftime(3)).  
+### str:ftime(Fmt, {Date, Time, Tz}) -> Bs
+Use binary string Fmt to format Date and Time into Bs.  All ordinary characters are copied as-is, while the following format characters are replaced (similar to strftime(3)).  Without Tz, assumes local time of user $TZ or system when $TZ is unset.  To ensure UTC, use ftime/3 with Tz = 0.
 
 **%A**	is replaced by the ~~locale's~~ English full weekday name.
 
@@ -196,6 +198,14 @@ Append Length characters from Bs2 to Bs1.
 Return an integer greater than, equal to, or less than 0 according to whether binary string Bs1 is greater than, equal to, or less than binary string Bs2, comparing at most Length octets.
 
 - - -
+### str:pad_int(Int, Pad, Width) -> Bs
+Return a binary string with the decimal integer right justified to the minimum field width; numbers shorter than the field width are left padded.  If the integer is negative and Pad is the zero (0) character, then a minus sign appears ahead of the zero padding.  Positive numbers have no sign.
+
+- - -
+### str:pad_sign_int(Int, Pad, Width) -> Bs
+Return a binary string with the signed decimal integer right justified to the minimum field width; numbers shorter than the field width are left padded.  If Pad is the zero (0) character, then the plus or minus sign appears ahead of the zero padding.
+
+- - -
 ### str:rchr(Bs, Ch) ->  Index | -1
 Return index of last occurrence of character in the binary string; otherwise -1 if not found.
 
@@ -229,7 +239,7 @@ Return the binary substring between start and stop index, excluding stop.  The i
 
 - - -
 ### str:tok(Bs, Delims) -> {<< Token >>, << Rest >>}
-Return a tuple of the first token separated by one or more delimiters and the remaing binary string.
+Return a tuple of the first token separated by one or more delimiters and the remaining binary string.
 
 - - -
 ### str:tr(Bs, FromSet) -> Bs

@@ -4,7 +4,7 @@
 	at/2, cat/2, ncat/3, cmp/2, ncmp/3, cpy/1, ncpy/2, chr/2, rchr/2,
 	error/1, len/1, rev/1, ltrim/1, rtrim/1, trim/1, spn/2, cspn/2, sub/2,
 	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
-	ftime/2, lpad/3, rpad/3
+	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3
 ]).
 
 len(Bs) ->
@@ -320,10 +320,15 @@ tr(<<Ch:8, Rest/binary>>, FromSet, ToSet, Acc) ->
 -define(MONTH_SHORT, {<<"Jan">>,<<"Feb">>,<<"Mar">>,<<"Apr">>,<<"May">>,<<"Jun">>,<<"Jul">>,<<"Aug">>,<<"Sep">>,<<"Oct">>,<<"Nov">>,<<"Dec">>}).
 
 ftime(Fmt, {Date, Time}) ->
-	ftime(Fmt, {Date, Time}, <<>>).
+	%% Kludge to find the current timezone, because Erlang doesn't
+	%% appear to have the necessary API support.
+	Tz = binary_to_integer(rtrim(list_to_binary(os:cmd("date +%z")))),
+	ftime(Fmt, {Date, Time, Tz});
+ftime(Fmt, {Date, Time, Tz}) ->
+	ftime(Fmt, {Date, Time, Tz}, <<>>).
 ftime(<<>>, _DateTime, Acc) ->
 	Acc;
-ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time}, Acc) ->
+ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time, Tz}, Acc) ->
 	{Year, Month, Day} = Date,
 	{Hour, Min, Sec} = Time,
 
@@ -344,48 +349,48 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time}, Acc) ->
 		ShortMonth = element(Month, ?MONTH_SHORT),
 		<<Acc/binary, ShortMonth/binary>>;
 	$C ->
-		Century = pad_int_to_bin(Year div 100, $0, 2),
+		Century = pad_int(Year div 100, $0, 2),
 		<<Acc/binary, Century/binary>>;
 	$c ->
-		Cdate = ftime(<<"%e %b %Y %H:%M:%S">>, {Date, Time}),
+		Cdate = ftime(<<"%e %b %Y %H:%M:%S">>, {Date, Time, Tz}),
 		<<Acc/binary, Cdate/binary>>;
 	$D ->
-		UsDate = ftime(<<"%m/%d/%y">>, {Date, Time}),
+		UsDate = ftime(<<"%m/%d/%y">>, {Date, Time, Tz}),
 		<<Acc/binary, UsDate/binary>>;
 	$d ->
-		Dday = pad_int_to_bin(Day, $0, 2),
+		Dday = pad_int(Day, $0, 2),
 		<<Acc/binary, Dday/binary>>;
 	$e ->
-		Eday = integer_to_binary(Day),
+		Eday = pad_int(Day, $ , 2),
 		<<Acc/binary, Eday/binary>>;
 	$F ->
-		IsoDate = ftime(<<"%Y-%m-%d">>, {Date, Time}),
+		IsoDate = ftime(<<"%Y-%m-%d">>, {Date, Time, Tz}),
 		<<Acc/binary, IsoDate/binary>>;
 	$G ->
-		throw({error, 'not implemented'});
+		throw({error, not_supported});
 	$g ->
-		throw({error, 'not implemented'});
+		throw({error, not_supported});
 	$H ->
-		Hr = pad_int_to_bin(Hour, $0, 2),
+		Hr = pad_int(Hour, $0, 2),
 		<<Acc/binary, Hr/binary>>;
 	$I ->
-		Hr12 = pad_int_to_bin(Hour rem 12, $0, 2),
+		Hr12 = pad_int(Hour rem 12, $0, 2),
 		<<Acc/binary, Hr12/binary>>;
 	$j ->
 		Yday = calendar:date_to_gregorian_days(Date) - calendar:date_to_gregorian_days(Year, 1, 1) + 1,
-		DecDayOfYear = pad_int_to_bin(Yday, $0, 3),
+		DecDayOfYear = pad_int(Yday, $0, 3),
 		<<Acc/binary, DecDayOfYear/binary>>;
 	$k ->
-		SpcHr = pad_int_to_bin(Hour, $ , 2),
+		SpcHr = pad_int(Hour, $ , 2),
 		<<Acc/binary, SpcHr/binary>>;
 	$l ->
-		SpcHr12 = pad_int_to_bin(Hour rem 12, $ , 2),
+		SpcHr12 = pad_int(Hour rem 12, $ , 2),
 		<<Acc/binary, SpcHr12/binary>>;
 	$M ->
-		Mn = pad_int_to_bin(Min, $0, 2),
+		Mn = pad_int(Min, $0, 2),
 		<<Acc/binary, Mn/binary>>;
 	$m ->
-		Mon = pad_int_to_bin(Month, $0, 2),
+		Mon = pad_int(Month, $0, 2),
 		<<Acc/binary, Mon/binary>>;
 	$n ->
 		<<Acc/binary, $\n>>;
@@ -397,13 +402,13 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time}, Acc) ->
 			<<Acc/binary, "pm">>
 		end;
 	$R ->
-		HrMn = ftime(<<"%H:%M">>, {Date, Time}),
+		HrMn = ftime(<<"%H:%M">>, {Date, Time, Tz}),
 		<<Acc/binary, HrMn/binary>>;
 	$r ->
-		HrMn12 = ftime(<<"%I:%M %p">>, {Date, Time}),
+		HrMn12 = ftime(<<"%l:%M %p">>, {Date, Time, Tz}),
 		<<Acc/binary, HrMn12/binary>>;
 	$S ->
-		Seconds = pad_int_to_bin(Sec, $0, 2),
+		Seconds = pad_int(Sec, $0, 2),
 		<<Acc/binary, Seconds/binary>>;
 	$s ->
 		Yday = calendar:date_to_gregorian_days(Date) - calendar:date_to_gregorian_days(Year, 1, 1),
@@ -413,44 +418,46 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time}, Acc) ->
 		EpochSec = integer_to_binary(Epoch),
 		<<Acc/binary, EpochSec/binary>>;
 	$T ->
-		IsoTime = ftime(<<"%H:%M:%S">>, {Date, Time}),
+		IsoTime = ftime(<<"%H:%M:%S">>, {Date, Time, Tz}),
 		<<Acc/binary, IsoTime/binary>>;
 	$t ->
 		<<Acc/binary, $\t>>;
 	$U ->
-		throw({error, 'not implemented'});
+		throw({error, not_supported});
 	$u ->
-		throw({error, 'not implemented'});
+		throw({error, not_supported});
 	$V ->
-		Week = pad_int_to_bin(calendar:iso_week_number(Date), $0, 2),
-		<<Acc/binary, Week/binary>>;
+		{_Year, Week} = calendar:iso_week_number(Date),
+		WeekNum = pad_int(Week, $0, 2),
+		<<Acc/binary, WeekNum/binary>>;
 	$v ->
-		Vdate = ftime(<<"%e-%b-%Y">>, {Date, Time}),
+		Vdate = ftime(<<"%e-%b-%Y">>, {Date, Time, Tz}),
 		<<Acc/binary, Vdate/binary>>;
 	$W ->
-		throw({error, 'not implemented'});
+		throw({error, not_supported});
 	$w ->
-		throw({error, 'not implemented'});
+		throw({error, not_supported});
 	$X ->
-		throw({error, 'not implemented'});
+		throw({error, not_supported});
 	$x ->
-		throw({error, 'not implemented'});
+		throw({error, not_supported});
 	$Y ->
-		FullYr = pad_int_to_bin(Year, $0, 4),
+		FullYr = pad_int(Year, $0, 4),
 		<<Acc/binary, FullYr/binary>>;
 	$y ->
-		ShortYr = pad_int_to_bin(Year rem 100, $0, 2),
+		ShortYr = pad_int(Year rem 100, $0, 2),
 		<<Acc/binary, ShortYr/binary>>;
 	$Z ->
-		throw({error, 'not implemented'});
+		throw({error, not_supported});
 	$z ->
-		throw({error, 'not implemented'});
+		Zone = pad_sign_int(Tz, $0, 5),
+		<<Acc/binary, Zone/binary>>;
 	$% ->
 		<<Acc/binary, $%>>;
 	_ ->
 		throw({error, einval})
 	end,
-	ftime(Rest, {Date, Time}, NewAcc);
+	ftime(Rest, {Date, Time, Tz}, NewAcc);
 ftime(<<Ch:8, Rest/binary>>, DateTime, Acc) ->
 	ftime(Rest, DateTime, <<Acc/binary, Ch:8>>).
 
@@ -464,5 +471,22 @@ rpad(Bs, _Pad, Width) when Width =< byte_size(Bs) ->
 rpad(Bs, Pad, Width) ->
 	rpad(<<Bs/binary, Pad:8>>, Pad, Width).
 
-pad_int_to_bin(Int, Pad, Width) ->
+pad_int(Int, $0, Width) when Int < 0 ->
+	Num = pad_int(-Int, $0, Width-1),
+	<<$-, Num/binary>>;
+pad_int(Int, Pad, Width) ->
 	lpad(integer_to_binary(Int), Pad, Width).
+
+pad_sign_int(Int, $0, Width) when Int < 0 ->
+	Num = pad_int(-Int, $0, Width-1),
+	<<$-, Num/binary>>;
+pad_sign_int(Int, $0, Width) ->
+	Num = pad_int(Int, $0, Width-1),
+	<<$+, Num/binary>>;
+pad_sign_int(Int, Pad, Width) when Int < 0 ->
+	Num = integer_to_binary(-Int),
+	lpad(<<$-, Num/binary>>, Pad, Width);
+pad_sign_int(Int, Pad, Width) ->
+	Num = integer_to_binary(Int),
+	lpad(<<$+, Num/binary>>, Pad, Width).
+
