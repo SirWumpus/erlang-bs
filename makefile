@@ -29,7 +29,11 @@ tar:
 test: unit
 
 unit:
-	rebar3 eunit
+	rebar3 eunit --cover
+
+cover: unit
+	rebar3 cover
+	lynx _build/test/cover/index.html
 
 _checkouts:
 	mkdir _checkouts
