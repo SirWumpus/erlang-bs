@@ -7,6 +7,10 @@
 	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3
 ]).
 
+%% These will move to another mondule (eventually).
+-export([time_to_epoch_seconds/1, time_zone_seconds/0]).
+
+
 len(Bs) ->
 	byte_size(Bs).
 
@@ -320,10 +324,7 @@ tr(<<Ch:8, Rest/binary>>, FromSet, ToSet, Acc) ->
 -define(MONTH_SHORT, {<<"Jan">>,<<"Feb">>,<<"Mar">>,<<"Apr">>,<<"May">>,<<"Jun">>,<<"Jul">>,<<"Aug">>,<<"Sep">>,<<"Oct">>,<<"Nov">>,<<"Dec">>}).
 
 ftime(Fmt, {Date, Time}) ->
-	%% Kludge to find the current timezone, because Erlang doesn't
-	%% appear to have the necessary API support.
-	Tz = binary_to_integer(rtrim(list_to_binary(os:cmd("date +%z")))),
-	ftime(Fmt, {Date, Time, Tz});
+	ftime(Fmt, {Date, Time, time_zone_seconds()});
 ftime(Fmt, {Date, Time, Tz}) ->
 	ftime(Fmt, {Date, Time, Tz}, <<>>).
 ftime(<<>>, _DateTime, Acc) ->
@@ -411,12 +412,8 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time, Tz}, Acc) ->
 		Seconds = pad_int(Sec, $0, 2),
 		<<Acc/binary, Seconds/binary>>;
 	$s ->
-		Yday = calendar:date_to_gregorian_days(Date) - calendar:date_to_gregorian_days(Year, 1, 1),
-		Epoch = Sec + Min * 60 + Hour * 3600
-			+ Yday * 86400 + (Year - 1970) * 31536000
-			+ ((Year - 1969) div 4) * 86400, %% - zone
-		EpochSec = integer_to_binary(Epoch),
-		<<Acc/binary, EpochSec/binary>>;
+		Epoch = integer_to_binary(time_to_epoch_seconds({Date, Time})),
+		<<Acc/binary, Epoch/binary>>;
 	$T ->
 		IsoTime = ftime(<<"%H:%M:%S">>, {Date, Time, Tz}),
 		<<Acc/binary, IsoTime/binary>>;
@@ -450,8 +447,9 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time, Tz}, Acc) ->
 	$Z ->
 		throw({error, not_supported});
 	$z ->
-		Zone = pad_sign_int(Tz, $0, 5),
-		<<Acc/binary, Zone/binary>>;
+		TzHr = pad_sign_int(Tz div 3600, $0, 3),
+		TzMn = pad_int(abs((Tz rem 3600) div 60), $0, 2),
+		<<Acc/binary, TzHr/binary, TzMn/binary>>;
 	$% ->
 		<<Acc/binary, $%>>;
 	_ ->
@@ -489,4 +487,16 @@ pad_sign_int(Int, Pad, Width) when Int < 0 ->
 pad_sign_int(Int, Pad, Width) ->
 	Num = integer_to_binary(Int),
 	lpad(<<$+, Num/binary>>, Pad, Width).
+
+%%
+%% These will move to another mondule (eventually).
+%%
+time_to_epoch_seconds({Date = {Year, _Month, _Day}, {Hour, Min, Sec}}) ->
+	Yday = calendar:date_to_gregorian_days(Date) - calendar:date_to_gregorian_days(Year, 1, 1),
+	Sec + Min * 60 + Hour * 3600 + Yday * 86400 + (Year - 1970) * 31536000 + ((Year - 1969) div 4) * 86400.
+
+time_zone_seconds() ->
+	Local = erlang:localtime(),
+	Utc = erlang:localtime_to_universaltime(Local),
+	time_to_epoch_seconds(Local) - time_to_epoch_seconds(Utc).
 

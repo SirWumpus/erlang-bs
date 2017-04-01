@@ -14,7 +14,7 @@ Data Types
 * Length = integer() >= 0
 * Date = { Year, Month, Day }
 * Time = { Hour, Minute, Second }
-* Tz = integer() ; time zone offset, eg. -500 = EST, -430 = Newfoundland
+* Tz = integer() ; time zone offset in seconds, eg. -18000 = -05:00 = EST, -12600 = -03:30 = Newfoundland
 
 
 Exports
