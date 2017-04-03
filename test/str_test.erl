@@ -123,9 +123,10 @@ sub_test_() ->
 tok_test_() ->
 	[
 	?_assertMatch({<<>>, <<>>}, str:tok(<<"">>, <<";,.">>)),
-	?_assertMatch({<<"ABC">>, <<"123">>}, str:tok(<<"ABC, 123">>, <<";,. ">>)),
-	?_assertMatch({<<"ABC">>, <<"123.foo">>}, str:tok(<<"ABC, 123.foo">>, <<";,. ">>)),
-	?_assertMatch({<<"123">>, <<"foo">>}, str:tok(<<"123.foo">>, <<";,. ">>))
+	?_assertMatch({<<"ABC">>, <<", 123">>}, str:tok(<<"ABC, 123">>, <<";,. ">>)),
+	?_assertMatch({<<"ABC">>, <<", 123.foo">>}, str:tok(<<"ABC, 123.foo">>, <<";,. ">>)),
+	?_assertMatch({<<"123">>, <<".foo">>}, str:tok(<<", 123.foo">>, <<";,. ">>)),
+	?_assertMatch({<<"foo">>, <<"">>}, str:tok(<<".foo">>, <<";,. ">>))
 	].
 
 cmp_test_() ->

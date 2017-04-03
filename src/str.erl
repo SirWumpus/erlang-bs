@@ -117,10 +117,10 @@ sub(<<_:8, Rest/binary>>, Start, Stop, Acc) ->
 	sub(Rest, Start-1, Stop-1, Acc).
 
 tok(Bs, Delims) ->
-	TokLen = cspn(Bs, Delims),
-	<<Token:TokLen/binary, Rest/binary>> = Bs,
-	SepLen = spn(Rest, Delims),
-	<<_:SepLen/binary, Rest2/binary>> = Rest,
+	SepLen = spn(Bs, Delims),
+	<<_:SepLen/binary, Rest/binary>> = Bs,
+	TokLen = cspn(Rest, Delims),
+	<<Token:TokLen/binary, Rest2/binary>> = Rest,
 	{Token, Rest2}.
 
 ncmp(_A, _B, 0) ->
@@ -499,4 +499,3 @@ time_zone_seconds() ->
 	Local = erlang:localtime(),
 	Utc = erlang:localtime_to_universaltime(Local),
 	time_to_epoch_seconds(Local) - time_to_epoch_seconds(Utc).
-

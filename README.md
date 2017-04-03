@@ -106,7 +106,7 @@ Return binary string error message for Reason.
 - - -
 ### str:ftime(Fmt, {Date, Time}) -> Bs
 ### str:ftime(Fmt, {Date, Time, Tz}) -> Bs
-Use binary string Fmt to format Date and Time into Bs.  All ordinary characters are copied as-is, while the following format characters are replaced (similar to strftime(3)).  Without Tz, assumes local time of user $TZ or system when $TZ is unset.  To ensure UTC, use ftime/3 with Tz = 0.
+Use binary string Fmt to format Date and Time into Bs.  All ordinary characters are copied as-is, while the following format characters are replaced (similar to strftime(3)).  Without Tz, assumes local time of user $TZ or system when $TZ is unset.  To ensure UTC, use ftime/2 with Tz = 0.
 
 **%A**	is replaced by the ~~locale's~~ English full weekday name.
 
