@@ -4,10 +4,10 @@
 	at/2, cat/2, ncat/3, cmp/2, ncmp/3, cpy/1, ncpy/2, chr/2, rchr/2,
 	error/1, len/1, rev/1, ltrim/1, rtrim/1, trim/1, spn/2, cspn/2, sub/2,
 	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
-	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3
+	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2
 ]).
 
-%% These will move to another mondule (eventually).
+%% These will move to another module (eventually).
 -export([time_to_epoch_seconds/1, time_zone_seconds/0]).
 
 
@@ -318,10 +318,10 @@ tr(<<Ch:8, Rest/binary>>, FromSet, ToSet, Acc) ->
 		tr(Rest, FromSet, ToSet, <<Acc/binary, Replace:8>>)
 	end.
 
--define(WEEK_DAYS_FULL, {<<"Monday">>,<<"Tuesday">>,<<"Wednesday">>,<<"Thursday">>,<<"Friday">>,<<"Saturday">>,<<"Sunday">>}).
--define(WEEK_DAYS_SHORT, {<<"Mon">>,<<"Tue">>,<<"Wed">>,<<"Thu">>,<<"Fri">>,<<"Sat">>,<<"Sun">>}).
--define(MONTH_FULL, {<<"January">>,<<"February">>,<<"March">>,<<"April">>,<<"May">>,<<"June">>,<<"July">>,<<"August">>,<<"September">>,<<"October">>,<<"November">>,<<"December">>}).
--define(MONTH_SHORT, {<<"Jan">>,<<"Feb">>,<<"Mar">>,<<"Apr">>,<<"May">>,<<"Jun">>,<<"Jul">>,<<"Aug">>,<<"Sep">>,<<"Oct">>,<<"Nov">>,<<"Dec">>}).
+-define(WEEK_DAYS_FULL, <<"Monday">>,<<"Tuesday">>,<<"Wednesday">>,<<"Thursday">>,<<"Friday">>,<<"Saturday">>,<<"Sunday">>).
+-define(WEEK_DAYS_SHORT, <<"Mon">>,<<"Tue">>,<<"Wed">>,<<"Thu">>,<<"Fri">>,<<"Sat">>,<<"Sun">>).
+-define(MONTH_FULL, <<"January">>,<<"February">>,<<"March">>,<<"April">>,<<"May">>,<<"June">>,<<"July">>,<<"August">>,<<"September">>,<<"October">>,<<"November">>,<<"December">>).
+-define(MONTH_SHORT, <<"Jan">>,<<"Feb">>,<<"Mar">>,<<"Apr">>,<<"May">>,<<"Jun">>,<<"Jul">>,<<"Aug">>,<<"Sep">>,<<"Oct">>,<<"Nov">>,<<"Dec">>).
 
 ftime(Fmt, {Date, Time}) ->
 	ftime(Fmt, {Date, Time, time_zone_seconds()});
@@ -335,19 +335,19 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time, Tz}, Acc) ->
 
 	NewAcc = case Ch of
 	$A ->
-		FullDay = element(calendar:day_of_the_week(Date), ?WEEK_DAYS_FULL),
+		FullDay = element(calendar:day_of_the_week(Date), {?WEEK_DAYS_FULL}),
 		<<Acc/binary, FullDay/binary>>;
 	$a ->
-		ShortDay = element(calendar:day_of_the_week(Date), ?WEEK_DAYS_SHORT),
+		ShortDay = element(calendar:day_of_the_week(Date), {?WEEK_DAYS_SHORT}),
 		<<Acc/binary, ShortDay/binary>>;
 	$B ->
-		FullMonth = element(Month, ?MONTH_FULL),
+		FullMonth = element(Month, {?MONTH_FULL}),
 		<<Acc/binary, FullMonth/binary>>;
 	$b ->
-		ShortMonth = element(Month, ?MONTH_SHORT),
+		ShortMonth = element(Month, {?MONTH_SHORT}),
 		<<Acc/binary, ShortMonth/binary>>;
 	$h ->
-		ShortMonth = element(Month, ?MONTH_SHORT),
+		ShortMonth = element(Month, {?MONTH_SHORT}),
 		<<Acc/binary, ShortMonth/binary>>;
 	$C ->
 		Century = pad_int(Year div 100, $0, 2),
@@ -488,8 +488,35 @@ pad_sign_int(Int, Pad, Width) ->
 	Num = integer_to_binary(Int),
 	lpad(<<$+, Num/binary>>, Pad, Width).
 
+to_int(<<"0x", Rest/binary>>, Base) when Base == 0 orelse Base == 16 ->
+	to_int(Rest, 16, 0, 1);
+to_int(<<"0", Rest/binary>>, 0) ->
+	to_int(Rest, 8, 0, 1);
+to_int(Bs, 0) ->
+	to_int(Bs, 10);
+to_int(<<$-, Rest/binary>>, 10) ->
+	to_int(Rest, 10, 0, -1);
+to_int(<<$+, Rest/binary>>, 10) ->
+	to_int(Rest, 10, 0, 1);
+to_int(Bs, Base) ->
+	to_int(Bs, Base, 0, 1).
+to_int(<<>>, _Base, Acc, Sign) ->
+	{ Sign * Acc, <<>> };
+to_int(<<Ch:8, Rest/binary>>, Base, Acc, Sign) ->
+	case ctype:isbase(Ch, Base) of
+	true ->
+		case ctype:isdigit(Ch) of
+		true ->
+			to_int(Rest, Base, Acc * Base + (Ch - $0), Sign);
+		false ->
+			to_int(Rest, Base, Acc * Base + (10 + ctype:toupper(Ch) - $A), Sign)
+		end;
+	false ->
+		{ Sign * Acc, <<Ch:8, Rest/binary>> }
+	end.
+
 %%
-%% These will move to another mondule (eventually).
+%% These will move to another module (eventually).
 %%
 time_to_epoch_seconds({Date = {Year, _Month, _Day}, {Hour, Min, Sec}}) ->
 	Yday = calendar:date_to_gregorian_days(Date) - calendar:date_to_gregorian_days(Year, 1, 1),
@@ -499,3 +526,4 @@ time_zone_seconds() ->
 	Local = erlang:localtime(),
 	Utc = erlang:localtime_to_universaltime(Local),
 	time_to_epoch_seconds(Local) - time_to_epoch_seconds(Utc).
+

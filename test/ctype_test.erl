@@ -284,3 +284,41 @@ toupper_test_() ->
 	?_assertMatch($[, ctype:toupper($[)),
 	?_assertMatch($], ctype:toupper($]))
 	].
+
+isbase_test_() ->
+	[
+	?_assertMatch(false, ctype:isbase($0, -1)),
+	?_assertMatch(false, ctype:isbase($Z, 37)),
+	?_assertMatch(false, ctype:isbase($., 2)),
+	?_assertMatch(true, ctype:isbase($0, 2)),
+	?_assertMatch(true, ctype:isbase($1, 2)),
+	?_assertMatch(false, ctype:isbase($2, 2)),
+	?_assertMatch(false, ctype:isbase($., 8)),
+	?_assertMatch(true, ctype:isbase($0, 8)),
+	?_assertMatch(true, ctype:isbase($1, 8)),
+	?_assertMatch(true, ctype:isbase($2, 8)),
+	?_assertMatch(true, ctype:isbase($3, 8)),
+	?_assertMatch(true, ctype:isbase($4, 8)),
+	?_assertMatch(true, ctype:isbase($5, 8)),
+	?_assertMatch(true, ctype:isbase($6, 8)),
+	?_assertMatch(true, ctype:isbase($7, 8)),
+	?_assertMatch(false, ctype:isbase($8, 8)),
+	?_assertMatch(false, ctype:isbase($., 10)),
+	?_assertMatch(true, ctype:isbase($0, 10)),
+	?_assertMatch(true, ctype:isbase($9, 10)),
+	?_assertMatch(false, ctype:isbase($A, 10)),
+	?_assertMatch(false, ctype:isbase($a, 10)),
+	?_assertMatch(false, ctype:isbase($., 16)),
+	?_assertMatch(true, ctype:isbase($0, 16)),
+	?_assertMatch(true, ctype:isbase($9, 16)),
+	?_assertMatch(true, ctype:isbase($A, 16)),
+	?_assertMatch(true, ctype:isbase($a, 16)),
+	?_assertMatch(true, ctype:isbase($F, 16)),
+	?_assertMatch(true, ctype:isbase($f, 16)),
+	?_assertMatch(false, ctype:isbase($G, 16)),
+	?_assertMatch(false, ctype:isbase($g, 16)),
+	?_assertMatch(true, ctype:isbase($0, 36)),
+	?_assertMatch(true, ctype:isbase($Z, 36)),
+	?_assertMatch(true, ctype:isbase($z, 36)),
+	?_assertMatch(false, ctype:isbase($[, 36))
+	].

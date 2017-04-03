@@ -20,6 +20,11 @@ Data Types
 Exports
 -------
 
+### ctype:isbase(Ch, Base) -> boolean()
+True if the character is in the given number base (2..36).
+
+- - -
+
 ### ctype:isblank(Ch) -> boolean()
 True if the character is a space or tab.
 
@@ -236,6 +241,10 @@ Return the binary substring from starting index until  end of string.  The index
 - - -
 ### str:sub(Bs, Start, Stop) -> Bs
 Return the binary substring between start and stop index, excluding stop.  The indices counts from zero (0).
+
+- - -
+### str:to_int(Bs, Base) -> { integer(), << Rest >> }
+Return a tulpe of the leading parsed integer and remaining binary string.  The parsed integer string can be  padded with leading zeros.  If base is zero or 16, the string may then include a `0x' prefix, and the number will be read in base 16; otherwise, a zero base is taken as 10 (decimal) unless the next character is `0', in which case it is taken as 8 (octal).
 
 - - -
 ### str:tok(Bs, Delims) -> {<< Token >>, << Rest >>}

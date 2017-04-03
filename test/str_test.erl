@@ -388,3 +388,23 @@ tr_test_() ->
 	?_assertMatch(<<"123">>, str:tr(<<"#1##2###3">>, <<"#">>, <<"">>))
 	].
 
+to_int_test_() ->
+	[
+	?_assertMatch({0, <<>>}, str:to_int(<<>>, -1)),
+	?_assertMatch({0, <<>>}, str:to_int(<<>>, 37)),
+	?_assertMatch({0, <<"123">>}, str:to_int(<<"123">>, -1)),
+	?_assertMatch({0, <<"123">>}, str:to_int(<<"123">>, 37)),
+	?_assertMatch({2, <<>>}, str:to_int(<<"10">>, 2)),
+	?_assertMatch({9, <<>>}, str:to_int(<<"1001">>, 2)),
+	?_assertMatch({999, <<>>}, str:to_int(<<"00999">>, 10)),
+	?_assertMatch({-999, <<>>}, str:to_int(<<"-00999">>, 10)),
+	?_assertMatch({+999, <<>>}, str:to_int(<<"+00999">>, 10)),
+	?_assertMatch({16#deadbeef, <<>>}, str:to_int(<<"000DEADbeef">>, 16)),
+	?_assertMatch({16#beef1234, <<>>}, str:to_int(<<"0x000beef1234">>, 16)),
+	?_assertMatch({36#deathmatch, <<>>}, str:to_int(<<"000DeathMatch">>, 36)),
+	?_assertMatch({255, <<":foobar">>}, str:to_int(<<"0377:foobar">>, 0)),
+	?_assertMatch({16#abcd, <<":foobar">>}, str:to_int(<<"0xAbCd:foobar">>, 0)),
+	?_assertMatch({999, <<":foobar">>}, str:to_int(<<"999:foobar">>, 0)),
+	?_assertMatch({-999, <<":foobar">>}, str:to_int(<<"-00999:foobar">>, 0)),
+	?_assertMatch({+999, <<":foobar">>}, str:to_int(<<"+00999:foobar">>, 0))
+	].

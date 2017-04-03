@@ -2,7 +2,7 @@
 -export([
 	isblank/1, isspace/1, isprint/1, isdigit/1, isxdigit/1,
         iscntrl/1, isalpha/1, isalnum/1, isupper/1, islower/1, ispunct/1,
-        tolower/1, toupper/1
+        tolower/1, toupper/1, isbase/2
 ]).
 
 %%
@@ -57,3 +57,15 @@ toupper(Ch) ->
 	false ->
 		Ch
 	end.
+
+isbase(Ch, Base) when 2 =< Base andalso Base =< 36 ->
+	case str:chr(<<"0123456789abcdefghijklmnopqrstuvwxyz">>, tolower(Ch)) of
+	-1 ->
+		false;
+	Index when Index < Base ->
+		true;
+	_ ->
+		false
+	end;
+isbase(_Ch, _Base) ->
+	false.
