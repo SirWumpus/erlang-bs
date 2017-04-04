@@ -123,9 +123,9 @@ sub_test_() ->
 tok_test_() ->
 	[
 	?_assertMatch({<<>>, <<>>}, str:tok(<<"">>, <<";,.">>)),
-	?_assertMatch({<<"ABC">>, <<", 123">>}, str:tok(<<"ABC, 123">>, <<";,. ">>)),
-	?_assertMatch({<<"ABC">>, <<", 123.foo">>}, str:tok(<<"ABC, 123.foo">>, <<";,. ">>)),
-	?_assertMatch({<<"123">>, <<".foo">>}, str:tok(<<", 123.foo">>, <<";,. ">>)),
+	?_assertMatch({<<"ABC">>, <<"123">>}, str:tok(<<"ABC, 123">>, <<";,. ">>)),
+	?_assertMatch({<<"ABC">>, <<"123.foo">>}, str:tok(<<"ABC, 123.foo">>, <<";,. ">>)),
+	?_assertMatch({<<"123">>, <<"foo">>}, str:tok(<<", 123.foo">>, <<";,. ">>)),
 	?_assertMatch({<<"foo">>, <<"">>}, str:tok(<<".foo">>, <<";,. ">>))
 	].
 
@@ -390,15 +390,16 @@ tr_test_() ->
 
 to_int_test_() ->
 	[
-	?_assertMatch({0, <<>>}, str:to_int(<<>>, -1)),
-	?_assertMatch({0, <<>>}, str:to_int(<<>>, 37)),
-	?_assertMatch({0, <<"123">>}, str:to_int(<<"123">>, -1)),
-	?_assertMatch({0, <<"123">>}, str:to_int(<<"123">>, 37)),
+	?_assertMatch(badarg, str:to_int(<<>>, -1)),
+	?_assertMatch(badarg, str:to_int(<<>>, 37)),
+	?_assertMatch(badarg, str:to_int(<<"123">>, -1)),
+	?_assertMatch(badarg, str:to_int(<<"123">>, 37)),
+	?_assertMatch(badarg, str:to_int(<<"no digits">>, 10)),
 	?_assertMatch({2, <<>>}, str:to_int(<<"10">>, 2)),
 	?_assertMatch({9, <<>>}, str:to_int(<<"1001">>, 2)),
-	?_assertMatch({999, <<>>}, str:to_int(<<"00999">>, 10)),
-	?_assertMatch({-999, <<>>}, str:to_int(<<"-00999">>, 10)),
-	?_assertMatch({+999, <<>>}, str:to_int(<<"+00999">>, 10)),
+	?_assertMatch({999, <<>>}, str:to_int(<<"  00999">>, 10)),
+	?_assertMatch({-999, <<>>}, str:to_int(<<"  -00999">>, 10)),
+	?_assertMatch({+999, <<>>}, str:to_int(<<"  +00999">>, 10)),
 	?_assertMatch({16#deadbeef, <<>>}, str:to_int(<<"000DEADbeef">>, 16)),
 	?_assertMatch({16#beef1234, <<>>}, str:to_int(<<"0x000beef1234">>, 16)),
 	?_assertMatch({36#deathmatch, <<>>}, str:to_int(<<"000DeathMatch">>, 36)),

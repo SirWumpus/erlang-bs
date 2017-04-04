@@ -117,11 +117,17 @@ sub(<<_:8, Rest/binary>>, Start, Stop, Acc) ->
 	sub(Rest, Start-1, Stop-1, Acc).
 
 tok(Bs, Delims) ->
+	% Skip leading delimiters.
 	SepLen = spn(Bs, Delims),
 	<<_:SepLen/binary, Rest/binary>> = Bs,
+
 	TokLen = cspn(Rest, Delims),
 	<<Token:TokLen/binary, Rest2/binary>> = Rest,
-	{Token, Rest2}.
+
+	% Consume trailing delimiters.
+	SepLen2 = spn(Rest2, Delims),
+	<<_:SepLen2/binary, Rest3/binary>> = Rest2,
+	{Token, Rest3}.
 
 ncmp(_A, _B, 0) ->
 	0;
@@ -489,30 +495,36 @@ pad_sign_int(Int, Pad, Width) ->
 	lpad(<<$+, Num/binary>>, Pad, Width).
 
 to_int(<<"0x", Rest/binary>>, Base) when Base == 0 orelse Base == 16 ->
-	to_int(Rest, 16, 0, 1);
+	to_int(Rest, 16, 0, 1, false);
 to_int(<<"0", Rest/binary>>, 0) ->
-	to_int(Rest, 8, 0, 1);
+	to_int(Rest, 8, 0, 1, false);
 to_int(Bs, 0) ->
 	to_int(Bs, 10);
+to_int(<<$ , Rest/binary>>, Base) ->
+	to_int(Rest, Base);
 to_int(<<$-, Rest/binary>>, 10) ->
-	to_int(Rest, 10, 0, -1);
+	to_int(Rest, 10, 0, -1, false);
 to_int(<<$+, Rest/binary>>, 10) ->
-	to_int(Rest, 10, 0, 1);
+	to_int(Rest, 10, 0, 1, false);
 to_int(Bs, Base) ->
-	to_int(Bs, Base, 0, 1).
-to_int(<<>>, _Base, Acc, Sign) ->
+	to_int(Bs, Base, 0, 1, false).
+to_int(<<>>, _Base, _Acc, _Sign, false) ->
+	badarg;
+to_int(<<>>, _Base, Acc, Sign, true) ->
 	{ Sign * Acc, <<>> };
-to_int(<<Ch:8, Rest/binary>>, Base, Acc, Sign) ->
+to_int(<<Ch:8, Rest/binary>>, Base, Acc, Sign, Has_digits) ->
 	case ctype:isbase(Ch, Base) of
 	true ->
 		case ctype:isdigit(Ch) of
 		true ->
-			to_int(Rest, Base, Acc * Base + (Ch - $0), Sign);
+			to_int(Rest, Base, Acc * Base + (Ch - $0), Sign, true);
 		false ->
-			to_int(Rest, Base, Acc * Base + (10 + ctype:toupper(Ch) - $A), Sign)
+			to_int(Rest, Base, Acc * Base + (10 + ctype:toupper(Ch) - $A), Sign, true)
 		end;
+	false when Has_digits ->
+		{ Sign * Acc, <<Ch:8, Rest/binary>> };
 	false ->
-		{ Sign * Acc, <<Ch:8, Rest/binary>> }
+		badarg
 	end.
 
 %%
