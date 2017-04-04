@@ -4,11 +4,12 @@
 	at/2, cat/2, ncat/3, cmp/2, ncmp/3, cpy/1, ncpy/2, chr/2, rchr/2,
 	error/1, len/1, rev/1, ltrim/1, rtrim/1, trim/1, spn/2, cspn/2, sub/2,
 	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
-	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2
+	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2,
+	to_date_time/1
 ]).
 
 %% These will move to another module (eventually).
--export([time_to_epoch_seconds/1, time_zone_seconds/0]).
+-export([time_to_epoch_seconds/1, time_zone_seconds/0, index_of/2]).
 
 
 len(Bs) ->
@@ -527,6 +528,183 @@ to_int(<<Ch:8, Rest/binary>>, Base, Acc, Sign, Has_digits) ->
 		badarg
 	end.
 
+to_date_time(Bs) ->
+	case iso_date_time(Bs) of
+	badarg ->
+		case ctime(Bs) of
+		badarg ->
+			case rfc_date_time(Bs) of
+			badarg ->
+				badarg;
+			DateTimeTz_Rest3 ->
+				DateTimeTz_Rest3
+			end;
+		DateTimeTz_Rest2 ->
+			DateTimeTz_Rest2
+		end;
+	DateTimeTz_Rest1 ->
+		DateTimeTz_Rest1
+	end.
+
+%%
+%%	[www[", "]] mmm " " dd " " HH ":" MM ":" SS " " [yyyy [zzzzzz]]
+%%
+ctime(Bs) ->
+	try
+		{Token1, Rest1} = str:tok(Bs, <<" ,\t\n">>),
+		Rest2 = case index_of(Token1, [?WEEK_DAYS_SHORT, ?WEEK_DAYS_FULL]) of
+		notfound ->
+			case index_of(Token1, [?MONTH_SHORT, ?MONTH_FULL]) of
+			notfound ->
+				throw(badarg);
+			_ ->
+				Bs
+			end;
+		_Index ->
+			Rest1
+		end,
+
+		{Token2, Rest3} = str:tok(Rest2, <<" ,\t\n">>),
+		Month = case index_of(Token2, [?MONTH_SHORT, ?MONTH_FULL]) of
+		notfound ->
+			throw(badarg);
+		Index ->
+			Index rem 12 + 1
+		end,
+
+		{Day, Rest4} = str:to_int(Rest3, 10),
+		{Hour, Rest5} = str:to_int(Rest4, 10),
+
+		{Token5, Rest6} = str:tok(Rest5, <<":">>),
+		{Minute, _} = str:to_int(Token5, 10),
+
+		{Second, Rest7} = str:to_int(Rest6, 10),
+
+		{Year, Rest8} = str:to_int(Rest7, 10),
+		{Tz, Rest9} = iso_time_zone(Rest8),
+
+		{{{Year, Month, Day}, {Hour, Minute, Second}, Tz}, Rest9}
+	catch
+		_ ->
+			badarg
+	end.
+
+%%
+%%	[www[", "]] dd " " mmm " " yyyy " " [HH ":" MM ":" SS [zzzzzz]]
+%%
+rfc_date_time(Bs) ->
+	try
+		{Token1, Rest1} = str:tok(Bs, <<" ,\t\n">>),
+		Rest2 = case index_of(Token1, [?WEEK_DAYS_SHORT, ?WEEK_DAYS_FULL]) of
+		notfound ->
+			case str:to_int(Token1, 10) of
+			badarg ->
+				throw(badarg);
+			_ ->
+				Bs
+			end;
+		_Index ->
+			Rest1
+		end,
+
+		{Day, Rest3} = str:to_int(Rest2, 10),
+
+		{Token2, Rest4} = str:tok(Rest3, <<" ,\t\n">>),
+		Month = case index_of(Token2, [?MONTH_SHORT, ?MONTH_FULL]) of
+		notfound ->
+			throw(badarg);
+		Index ->
+			Index rem 12 + 1
+		end,
+
+		{Year, Rest5} = str:to_int(Rest4, 10),
+		{Hour, Rest6} = str:to_int(Rest5, 10),
+
+		{Token3, Rest7} = str:tok(Rest6, <<":">>),
+		{Minute, _} = str:to_int(Token3, 10),
+
+		{Second, Rest8} = str:to_int(Rest7, 10),
+
+		{Tz, Rest9} = iso_time_zone(Rest8),
+
+		{{{Year, Month, Day}, {Hour, Minute, Second}, Tz}, Rest9}
+	catch
+		_ ->
+			badarg
+	end.
+
+iso_date_time(Bs) ->
+	try
+		case iso_date(Bs) of
+		{ Date, Rest1 } ->
+			case iso_time(Rest1) of
+			{ Time, Tz, Rest2 } ->
+				{ {Date, Time, Tz}, Rest2 };
+			badarg ->
+				{ {Date, {0,0,0}, time_zone_seconds()}, Rest1 }
+			end;
+		badarg ->
+			badarg
+		end
+	catch
+		error:badarg ->
+			badarg
+	end.
+
+iso_date(<<Year:4/bytes, $-, Month:2/bytes, $-, Day:2/bytes, Rest/binary>>) ->
+	{{binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)}, Rest};
+iso_date(<<Year:4/bytes, Month:2/bytes, Day:2/bytes, Rest/binary>>) ->
+	{{binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)}, Rest};
+iso_date(Bs) ->
+	badarg.
+
+iso_time(<<$T, Hour:2/bytes, $:, Minute:2/bytes, $:, Second:2/bytes, Rest/binary>>) ->
+	{Tz, Rest1} = iso_time_zone(iso_time_fraction(Rest)),
+	{ {binary_to_integer(Hour), binary_to_integer(Minute), binary_to_integer(Second)}, Tz, Rest1 };
+iso_time(<<$T, Hour:2/bytes, Minute:2/bytes, Second:2/bytes, Rest/binary>>) ->
+	{Tz, Rest1} = iso_time_zone(iso_time_fraction(Rest)),
+	{ {binary_to_integer(Hour), binary_to_integer(Minute), binary_to_integer(Second)}, Tz, Rest1 };
+iso_time(Bs) ->
+	badarg.
+
+iso_time_fraction(<<>>) ->
+	<<>>;
+iso_time_fraction(<<$., Rest/binary>>) ->
+	iso_time_fraction(Rest);
+iso_time_fraction(<<$,, Rest/binary>>) ->
+	iso_time_fraction(Rest);
+iso_time_fraction(<<Ch:8, Rest/binary>>) ->
+	case ctype:isdigit(Ch) of
+	true ->
+		iso_time_fraction(Rest);
+	false ->
+		<<Ch:8, Rest/binary>>
+	end.
+
+iso_time_zone(<<>>) ->
+	{time_zone_seconds(), <<>>};
+iso_time_zone(<<$Z, Rest/binary>>) ->
+	{0, Rest};
+iso_time_zone(Bs) ->
+	case iso_time_zone_(Bs) of
+	badarg ->
+		{time_zone_seconds(), Bs};
+	{TzSign, TzHr, TzMn, Rest} ->
+		{TzSign * (binary_to_integer(TzHr) * 3600 + binary_to_integer(TzMn) * 60), Rest}
+	end.
+iso_time_zone_(<<$ , Rest/binary>>) ->
+	iso_time_zone_(Rest);
+iso_time_zone_(<<$-, TzHr:2/bytes, $:, TzMn:2/bytes, Rest/binary>>) ->
+	{-1, TzHr, TzMn, Rest};
+iso_time_zone_(<<$+, TzHr:2/bytes, $:, TzMn:2/bytes, Rest/binary>>) ->
+	{1, TzHr, TzMn, Rest};
+iso_time_zone_(<<$-, TzHr:2/bytes, TzMn:2/bytes, Rest/binary>>) ->
+	{-1, TzHr, TzMn, Rest};
+iso_time_zone_(<<$+, TzHr:2/bytes, TzMn:2/bytes, Rest/binary>>) ->
+	{1, TzHr, TzMn, Rest};
+iso_time_zone_(Bs) ->
+	badarg.
+
 %%
 %% These will move to another module (eventually).
 %%
@@ -538,4 +716,13 @@ time_zone_seconds() ->
 	Local = erlang:localtime(),
 	Utc = erlang:localtime_to_universaltime(Local),
 	time_to_epoch_seconds(Local) - time_to_epoch_seconds(Utc).
+
+index_of(Item, List) ->
+	index_of(Item, List, 0).
+index_of(_, [], _)  ->
+	notfound;
+index_of(Item, [Item|_], Index) ->
+	Index;
+index_of(Item, [_|Tl], Index) ->
+	index_of(Item, Tl, Index + 1).
 

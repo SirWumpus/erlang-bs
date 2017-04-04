@@ -409,3 +409,26 @@ to_int_test_() ->
 	?_assertMatch({-999, <<":foobar">>}, str:to_int(<<"-00999:foobar">>, 0)),
 	?_assertMatch({+999, <<":foobar">>}, str:to_int(<<"+00999:foobar">>, 0))
 	].
+
+to_date_time_test_() ->
+	[
+	?_assertMatch(badarg, str:to_date_time(<<>>)),
+	?_assertMatch(badarg, str:to_date_time(<<"boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{0, 0, 0}, _Tz}, <<" boo!">>}, str:to_date_time(<<"20170401 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{0, 0, 0}, _Tz}, <<" boo!">>}, str:to_date_time(<<"2017-04-01 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, 0}, <<" boo!">>}, str:to_date_time(<<"20170401T180923Z boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<" boo!">>}, str:to_date_time(<<"20170401T180923.234 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"20170401T180923.234-0330 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"2017-04-01T18:09:23.234-03:30 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<" boo!">>}, str:to_date_time(<<"Apr 1 18:09:23 2017 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Apr 1 18:09:23 2017 -0330 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Sat Apr 1 18:09:23 2017 -0330 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Sat, Apr 1 18:09:23 2017 -03:30 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Saturday, April 1 18:09:23 2017 -0330 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<" boo!">>}, str:to_date_time(<<"1 Apr 2017 18:09:23 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"1 Apr 2017 18:09:23 -0330 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Sat 1 Apr 2017 18:09:23 -0330 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Sat, 1 Apr 2017 18:09:23 -03:30 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Saturday, 1 April 2017 18:09:23 -0330 boo!">>))
+	].
+

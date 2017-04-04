@@ -243,8 +243,12 @@ Return the binary substring from starting index until  end of string.  The index
 Return the binary substring between start and stop index, excluding stop.  The indices counts from zero (0).
 
 - - -
+### str:to_date_time(Bs) -> { {Date, Time, Tz}, << Rest >> } | badarg
+Attempt to parse the leading portion of Bs as an ISO 8601, RFC 2822, or ctime() date-time string.  If time zone information is missing, then the local time zone is assumed.  `badarg` is returned if no input is consumed.
+
+- - -
 ### str:to_int(Bs, Base) -> { integer(), << Rest >> } | badarg
-Return a tulpe of the leading parsed integer and remaining binary string.  The parsed integer string can be  padded with leading zeros.  If base is zero or 16, the string may then include a `0x' prefix, and the number will be read in base 16; otherwise, a zero base is taken as 10 (decimal) unless the next character is `0', in which case it is taken as 8 (octal).
+Return a tulpe of the leading parsed integer and remaining binary string.  The parsed integer string can be  padded with leading zeros.  If base is zero or 16, the string may then include a '0x' prefix, and the number will be read in base 16; otherwise, a zero base is taken as 10 (decimal) unless the next character is '0', in which case it is taken as 8 (octal).  `badarg` is returned if no input is consumed.
 
 - - -
 ### str:tok(Bs, Delims) -> {<< Token >>, << Rest >>}
