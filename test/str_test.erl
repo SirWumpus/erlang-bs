@@ -410,25 +410,110 @@ to_int_test_() ->
 	?_assertMatch({+999, <<":foobar">>}, str:to_int(<<"+00999:foobar">>, 0))
 	].
 
+iso_date_time_test_() ->
+	[
+	?_assertMatch(badarg, str:iso_date_time(<<>>)),
+	?_assertMatch(badarg, str:iso_date_time(<<" boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{0, 0, 0}, _Tz}, <<"--boo!">>}, str:iso_date_time(<<"20170401--boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{0, 0, 0}, _Tz}, <<" boo!">>}, str:iso_date_time(<<"20170401 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{0, 0, 0}, _Tz}, <<" boo!">>}, str:iso_date_time(<<"2017-04-01 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<"">>}, str:iso_date_time(<<"20170401T180923">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, 0}, <<" boo!">>}, str:iso_date_time(<<"20170401T180923Z boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, 0}, <<" boo!">>}, str:iso_date_time(<<"20170401T18:09:23Z boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, 0}, <<" boo!">>}, str:iso_date_time(<<"2017-04-01T18:09:23Z boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, 0}, <<" boo!">>}, str:iso_date_time(<<"20170401T180923.234Z boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, 0}, <<" boo!">>}, str:iso_date_time(<<"20170401T180923,234Z boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<" boo!">>}, str:iso_date_time(<<"20170401T180923 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<" boo!">>}, str:iso_date_time(<<"20170401T18:09:23 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<" boo!">>}, str:iso_date_time(<<"2017-04-01T18:09:23 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<" boo!">>}, str:iso_date_time(<<"20170401T180923.234 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<" boo!">>}, str:iso_date_time(<<"20170401T180923.234 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:iso_date_time(<<"20170401T180923-0330 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:iso_date_time(<<"20170401T180923.234-0330 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, 12600}, <<" boo!">>}, str:iso_date_time(<<"20170401T180923.234+0330 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:iso_date_time(<<"2017-04-01T18:09:23.234-03:30 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, 12600}, <<" boo!">>}, str:iso_date_time(<<"2017-04-01T18:09:23.234+03:30 boo!">>))
+	].
+
+-define(UNDEFINED, {undefined,undefined,undefined}).
+
+ptime_test_() ->
+	[
+	?_assertMatch({{?UNDEFINED,?UNDEFINED,_Tz}, <<>>}, str:ptime(<<>>, <<>>)),
+	?_assertMatch({{?UNDEFINED,?UNDEFINED,_Tz}, <<"boo!">>}, str:ptime(<<"boo!">>,<<>>)),
+	?_assertMatch({{?UNDEFINED,?UNDEFINED,_Tz}, <<>>}, str:ptime(<<" boo!">>,<<" boo!">>)),
+	?_assertMatch({{?UNDEFINED,?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"[%]">>,<<"[%%]">>)),
+	?_assertMatch({badarg, <<"-]">>}, str:ptime(<<"[-]">>,<<"[%%]">>)),
+	?_assertMatch({{?UNDEFINED,?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"abc \t \f boo!">>,<<"abc boo!">>)),
+	?_assertMatch({{?UNDEFINED,?UNDEFINED,_Tz}, <<"boo!">>}, str:ptime(<<" \t\fboo!">>,<<"%n">>)),
+	?_assertMatch({{?UNDEFINED,?UNDEFINED,_Tz}, <<"boo!">>}, str:ptime(<<" \t\fboo!">>,<<"%t">>)),
+	?_assertMatch({badarg, <<"Antday">>}, str:ptime(<<"Antday">>,<<"%A">>)),
+	?_assertMatch({{?UNDEFINED,?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"Sat">>,<<"%a">>)),
+	?_assertMatch({{?UNDEFINED,?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"Monday">>,<<"%A">>)),
+	?_assertMatch({badarg, <<"Howember">>}, str:ptime(<<"Howember">>,<<"%b">>)),
+	?_assertMatch({{{undefined,9,undefined},?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"Sep">>,<<"%b">>)),
+	?_assertMatch({{{undefined,9,undefined},?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"September">>,<<"%B">>)),
+	?_assertMatch({badarg, <<"xx">>}, str:ptime(<<"xx">>,<<"%C">>)),
+	?_assertMatch({{{2017,undefined,undefined},?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"2017">>,<<"%C%y">>)),
+	?_assertMatch({{{2017,4,1},{20,35,43},_Tz}, <<>>}, str:ptime(<<"1 Apr 2017 20:35:43">>,<<"%c">>)),
+	?_assertMatch({badarg, <<"0">>}, str:ptime(<<"0">>,<<"%d">>)),
+	?_assertMatch({badarg, <<"32">>}, str:ptime(<<"32">>,<<"%d">>)),
+	?_assertMatch({{{undefined,undefined,31},?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"31">>,<<"%d">>)),
+	?_assertMatch({{{2017,4,1},?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"4/1/17">>,<<"%D">>)),
+	?_assertMatch({{{2017,4,1},?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"17/4/1">>,<<"%y/%m/%d">>)),
+	?_assertMatch({{{1984,4,1},?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"84/4/1">>,<<"%y/%m/%d">>)),
+	?_assertMatch({{{2017,4,1},?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"2017-04-01">>,<<"%F">>)),
+	?_assertMatch({badarg, <<"-1">>}, str:ptime(<<"-1">>,<<"%H">>)),
+	?_assertMatch({badarg, <<"24">>}, str:ptime(<<"24">>,<<"%H">>)),
+	?_assertMatch({badarg, <<"0">>}, str:ptime(<<"0">>,<<"%I">>)),
+	?_assertMatch({badarg, <<"13">>}, str:ptime(<<"13">>,<<"%I">>)),
+	?_assertMatch({badarg, <<"-1">>}, str:ptime(<<"-1">>,<<"%M">>)),
+	?_assertMatch({badarg, <<"60">>}, str:ptime(<<"60">>,<<"%M">>)),
+	?_assertMatch({badarg, <<"60">>}, str:ptime(<<"60">>,<<"%M">>)),
+	?_assertMatch({badarg, <<"0">>}, str:ptime(<<"0">>,<<"%m">>)),
+	?_assertMatch({badarg, <<"13">>}, str:ptime(<<"13">>,<<"%m">>)),
+	?_assertMatch({badarg, <<"-1">>}, str:ptime(<<"-1">>,<<"%S">>)),
+	?_assertMatch({badarg, <<"62">>}, str:ptime(<<"62">>,<<"%S">>)),
+	?_assertMatch({{{undefined,9,undefined},?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"9">>,<<"%m">>)),
+	?_assertMatch({badarg, <<"000">>}, str:ptime(<<"000">>,<<"%j">>)),
+	?_assertMatch({badarg, <<"666">>}, str:ptime(<<"666">>,<<"%j">>)),
+	?_assertMatch({{?UNDEFINED,?UNDEFINED,_Tz}, <<>>}, str:ptime(<<"095">>,<<"%j">>)),
+	?_assertMatch({{?UNDEFINED,{8,35,undefined},_Tz}, <<>>}, str:ptime(<<"8:35 am">>,<<"%r">>)),
+	?_assertMatch({{?UNDEFINED,{20,35,undefined},_Tz}, <<>>}, str:ptime(<<"8:35 pm">>,<<"%r">>)),
+	?_assertMatch({badarg, <<"ibm">>}, str:ptime(<<"ibm">>,<<"%p">>)),
+	?_assertMatch({{?UNDEFINED,{20,35,undefined},_Tz}, <<>>}, str:ptime(<<"20:35">>,<<"%R">>)),
+	?_assertMatch({{{2017,4,5},{20,55,20},_Tz}, <<>>}, str:ptime(<<"1491440120">>,<<"%s">>)),
+	?_assertMatch({{?UNDEFINED,{20,35,43},_Tz}, <<>>}, str:ptime(<<"20:35:43">>,<<"%T">>)),
+	?_assertMatch({badarg, <<"boo!">>}, str:ptime(<<"boo!">>,<<"%z">>)),
+	?_assertMatch({{?UNDEFINED,?UNDEFINED,-12600}, <<>>}, str:ptime(<<"-0330">>,<<"%z">>)),
+	?_assertMatch({{?UNDEFINED,{20,35,43},_Tz}, <<" boo!">>}, str:ptime(<<"20:35:43 boo!">>,<<"%T">>)),
+	?_assertMatch({badarg, <<" boo!">>}, str:ptime(<<"20:35:43 boo!">>,<<"%T%z">>)),
+	?_assertMatch({badarg, <<" boo!">>}, str:ptime(<<"20:35:43 boo!">>,<<"%T %z">>)),
+	?_assertMatch({{?UNDEFINED,?UNDEFINED,-12600}, <<" boo!">>}, str:ptime(<<"-0330 boo!">>,<<"%z">>)),
+	?_assertMatch({{?UNDEFINED,{20,35,43},-12600}, <<" boo!">>}, str:ptime(<<"20:35:43 -0330 boo!">>,<<"%T %z">>))
+	].
+
+-ifdef(testall).
 to_date_time_test_() ->
 	[
-	?_assertMatch(badarg, str:to_date_time(<<>>)),
-	?_assertMatch(badarg, str:to_date_time(<<"boo!">>)),
+	?_assertMatch({badarg, <<>>}, str:to_date_time(<<>>)),
+	?_assertMatch({badarg, <<"boo!">>}, str:to_date_time(<<"boo!">>)),
 	?_assertMatch({{{2017, 4, 1},{0, 0, 0}, _Tz}, <<" boo!">>}, str:to_date_time(<<"20170401 boo!">>)),
 	?_assertMatch({{{2017, 4, 1},{0, 0, 0}, _Tz}, <<" boo!">>}, str:to_date_time(<<"2017-04-01 boo!">>)),
 	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, 0}, <<" boo!">>}, str:to_date_time(<<"20170401T180923Z boo!">>)),
 	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<" boo!">>}, str:to_date_time(<<"20170401T180923.234 boo!">>)),
 	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"20170401T180923.234-0330 boo!">>)),
 	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"2017-04-01T18:09:23.234-03:30 boo!">>)),
-	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<" boo!">>}, str:to_date_time(<<"Apr 1 18:09:23 2017 boo!">>)),
-	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Apr 1 18:09:23 2017 -0330 boo!">>)),
-	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Sat Apr 1 18:09:23 2017 -0330 boo!">>)),
-	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Sat, Apr 1 18:09:23 2017 -03:30 boo!">>)),
-	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Saturday, April 1 18:09:23 2017 -0330 boo!">>)),
 	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<" boo!">>}, str:to_date_time(<<"1 Apr 2017 18:09:23 boo!">>)),
 	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"1 Apr 2017 18:09:23 -0330 boo!">>)),
 	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Sat 1 Apr 2017 18:09:23 -0330 boo!">>)),
 	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Sat, 1 Apr 2017 18:09:23 -03:30 boo!">>)),
-	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Saturday, 1 April 2017 18:09:23 -0330 boo!">>))
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Saturday, 1 April 2017 18:09:23 -0330 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23}, _Tz}, <<" boo!">>}, str:to_date_time(<<"Apr 1 18:09:23 2017 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Apr 1 18:09:23 2017 -0330 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Sat Apr 1 18:09:23 2017 -0330 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Sat, Apr 1 18:09:23 2017 -03:30 boo!">>)),
+	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Saturday, April 1 18:09:23 2017 -0330 boo!">>))
 	].
+-endif.
 

@@ -123,7 +123,7 @@ Use binary string Fmt to format Date and Time into Bs.  All ordinary characters 
 
 **%C**	is replaced by the century (a year divided by 100 and truncated to an integer) as a decimal number [00,99].
 
-**%c**	is replaced by the locale's appropriate date and time representation.
+**%c**	is replaced by the ~~locale's~~ RFC appropriate date and time representation, ``%e %b %Y %H:%M:%S''.
 
 **%D**	is replaced by the date in the format ``%m/%d/%y''.
 
@@ -149,11 +149,11 @@ Use binary string Fmt to format Date and Time into Bs.  All ordinary characters 
 
 **%n**	is replaced by a newline.
 
-**%p**	is replaced by the locale's equivalent of either ``AM'' or ``PM''.
+**%p**	is replaced by ~~the locale's equivalent of~~ either "am" or "pm".
 
 **%R**	is replaced by the time in the format ``%H:%M''.
 
-**%r**	is replaced by the locale's representation of 12-hour clock time using AM/PM notation.
+**%r**	is replaced by the ~~locale's~~ representation of 12-hour clock time using AM/PM notation.
 
 **%s**	is replaced by the number of seconds since the Epoch.
 
@@ -211,6 +211,71 @@ Return a binary string with the decimal integer right justified to the minimum f
 Return a binary string with the signed decimal integer right justified to the minimum field width; numbers shorter than the field width are left padded.  If Pad is the zero (0) character, then the plus or minus sign appears ahead of the zero padding.
 
 - - -
+### str:ptime(Bs, Fmt) -> { {Date, Time, Tz}, << Rest >> } | {badarg, << Rest >>}
+
+Whitespace matches zero or more whitespace characters and ordinary characters match themselves.
+
+**%a** the day of week, using ~~the locale's~~ English weekday names; either the abbreviated or full name may be specified.
+
+**%A** the same as %a.
+
+**%b** the month, using ~~the locale's~~ English month names; either the abbreviated or full name may be specified.
+
+**%B** the same as %b.
+
+**%c** the date and time, using ~~the locale's date and time format~~ ``%e %b %Y %H:%M:%S''.
+
+**%C** the century number [0,99]; leading zeros are permitted but not required.  This conversion should be used in conjunction with the %y conversion.
+
+**%d** the day of month [1,31]; leading zeros are permitted but not required.
+
+**%D** the date as %m/%d/%y.
+
+**%e** the same as %d.
+
+**%F** the date as %Y-%m-%d (the ISO 8601 date format).
+
+**%h** the same as %b.
+
+**%H** the hour (24-hour clock) [0,23]; leading zeros are permitted but not required.
+
+**%I** the hour (12-hour clock) [1,12]; leading zeros are permitted but not required.
+
+**%j** the day number of the year [1,366]; leading zeros are permitted but not required.
+
+**%k** the same as %H.
+
+**%l** the same as %I.
+
+**%m** the month number [1,12]; leading zeros are permitted but not required.
+
+**%M** the minute [0,59]; leading zeros are permitted but not required.
+
+**%n** any white-space, including none.
+
+**%p** ~~the locale's equivalent of~~ a.m. or p.m.
+
+**%r** the time (12-hour clock) with %p, ~~using the locale's time format~~ ``%l:%M %p''.
+
+**%R** the time as %H:%M.
+
+**%S** the seconds [0,61]; leading zeros are permitted but not required.
+
+**%s** the number of seconds since the Epoch, UTC (see mktime(3)).
+
+**%t** any white-space, including none.
+
+**%T** the time as %H:%M:%S.
+
+**%y** the year within the 20th century [69,99] or the 21st century [0,68]; leading zeros are permitted but not required.  If specified in conjunction with %C, specifies the year [0,99] within that century.
+
+**%Y** the year, including the century (i.e., 1996).
+
+**%z** an ISO 8601 or RFC-2822 timezone specification.  This is one of the following: the offset from Universal Time Coordinate (`UTC') specified as: ``[+-]hhmm'', ``[+-]hh:mm''.
+
+**%%** matches a literal `%'.  No argument is converted.
+
+- - -
 ### str:rchr(Bs, Ch) ->  Index | -1
 Return index of last occurrence of character in the binary string; otherwise -1 if not found.
 
@@ -243,7 +308,7 @@ Return the binary substring from starting index until  end of string.  The index
 Return the binary substring between start and stop index, excluding stop.  The indices counts from zero (0).
 
 - - -
-### str:to_date_time(Bs) -> { {Date, Time, Tz}, << Rest >> } | badarg
+### str:to_date_time(Bs) -> {{Date, Time, Tz}, << Rest >>} | badarg
 Attempt to parse the leading portion of Bs as an ISO 8601, RFC 2822, or ctime() date-time string.  If time zone information is missing, then the local time zone is assumed.  `badarg` is returned if no input is consumed.
 
 - - -

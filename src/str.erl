@@ -5,12 +5,15 @@
 	error/1, len/1, rev/1, ltrim/1, rtrim/1, trim/1, spn/2, cspn/2, sub/2,
 	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
 	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2,
-	to_date_time/1
+	ptime/2, to_date_time/1
 ]).
 
-%% These will move to another module (eventually).
--export([time_to_epoch_seconds/1, time_zone_seconds/0, index_of/2]).
-
+-ifdef(EUNIT).
+-export([
+	time_to_epoch_seconds/1, time_zone_seconds/0, iso_date_time/1,
+	index_of/2
+]).
+-endif.
 
 len(Bs) ->
 	byte_size(Bs).
@@ -531,123 +534,53 @@ to_int(<<Ch:8, Rest/binary>>, Base, Acc, Sign, Has_digits) ->
 to_date_time(Bs) ->
 	case iso_date_time(Bs) of
 	badarg ->
-		case ctime(Bs) of
-		badarg ->
-			case rfc_date_time(Bs) of
-			badarg ->
-				badarg;
-			DateTimeTz_Rest3 ->
-				DateTimeTz_Rest3
-			end;
-		DateTimeTz_Rest2 ->
-			DateTimeTz_Rest2
-		end;
-	DateTimeTz_Rest1 ->
-		DateTimeTz_Rest1
+		to_date_time(Bs, [
+			%% RFC 2822 date-time variants
+			<<"%a, %d %b %Y %H:%M:%S %z">>,	%% RFC 2822 date-time format.
+			<<"%a, %d %b %Y %H:%M:%S">>,
+			<<"%a %d %b %Y %H:%M:%S %z">>,
+			<<"%a %d %b %Y %H:%M:%S">>,
+			<<"%d %b %Y %H:%M:%S %z">>,
+			<<"%d %b %Y %H:%M:%S">>,
+
+			%% ctime() variants
+			<<"%a, %b %d %H:%M:%S %Y %z">>,
+			<<"%a, %b %d %H:%M:%S %Y">>,
+			<<"%a %b %d %H:%M:%S %Y %z">>,
+			<<"%a %b %d %H:%M:%S %Y">>,	%% ctime() format.
+			<<"%b %d %H:%M:%S %Y %z">>,
+			<<"%b %d %H:%M:%S %Y">>
+		]);
+	DateTimeTz_Rest ->
+		DateTimeTz_Rest
+	end.
+to_date_time(Bs, []) ->
+	{badarg, Bs};
+to_date_time(Bs, [Fmt | Tail]) ->
+io:format("fmt=~s~n", [Fmt]),
+	case ptime(Bs, Fmt) of
+	{badarg, _Rest} ->
+		to_date_time(Bs, Tail);
+	DateTimeTz_Rest ->
+		DateTimeTz_Rest
 	end.
 
 %%
-%%	[www[", "]] mmm " " dd " " HH ":" MM ":" SS " " [yyyy [zzzzzz]]
+%% Parse the most common formats of ISO 8601.
 %%
-ctime(Bs) ->
-	try
-		{Token1, Rest1} = str:tok(Bs, <<" ,\t\n">>),
-		Rest2 = case index_of(Token1, [?WEEK_DAYS_SHORT, ?WEEK_DAYS_FULL]) of
-		notfound ->
-			case index_of(Token1, [?MONTH_SHORT, ?MONTH_FULL]) of
-			notfound ->
-				throw(badarg);
-			_ ->
-				Bs
-			end;
-		_Index ->
-			Rest1
-		end,
-
-		{Token2, Rest3} = str:tok(Rest2, <<" ,\t\n">>),
-		Month = case index_of(Token2, [?MONTH_SHORT, ?MONTH_FULL]) of
-		notfound ->
-			throw(badarg);
-		Index ->
-			Index rem 12 + 1
-		end,
-
-		{Day, Rest4} = str:to_int(Rest3, 10),
-		{Hour, Rest5} = str:to_int(Rest4, 10),
-
-		{Token5, Rest6} = str:tok(Rest5, <<":">>),
-		{Minute, _} = str:to_int(Token5, 10),
-
-		{Second, Rest7} = str:to_int(Rest6, 10),
-
-		{Year, Rest8} = str:to_int(Rest7, 10),
-		{Tz, Rest9} = iso_time_zone(Rest8),
-
-		{{{Year, Month, Day}, {Hour, Minute, Second}, Tz}, Rest9}
-	catch
-		_ ->
-			badarg
-	end.
-
+%%	YYYY[-]MM[-]DD[Thh[:]mm[:]ss[.sss][-zz[:]zz]
 %%
-%%	[www[", "]] dd " " mmm " " yyyy " " [HH ":" MM ":" SS [zzzzzz]]
-%%
-rfc_date_time(Bs) ->
-	try
-		{Token1, Rest1} = str:tok(Bs, <<" ,\t\n">>),
-		Rest2 = case index_of(Token1, [?WEEK_DAYS_SHORT, ?WEEK_DAYS_FULL]) of
-		notfound ->
-			case str:to_int(Token1, 10) of
-			badarg ->
-				throw(badarg);
-			_ ->
-				Bs
-			end;
-		_Index ->
-			Rest1
-		end,
-
-		{Day, Rest3} = str:to_int(Rest2, 10),
-
-		{Token2, Rest4} = str:tok(Rest3, <<" ,\t\n">>),
-		Month = case index_of(Token2, [?MONTH_SHORT, ?MONTH_FULL]) of
-		notfound ->
-			throw(badarg);
-		Index ->
-			Index rem 12 + 1
-		end,
-
-		{Year, Rest5} = str:to_int(Rest4, 10),
-		{Hour, Rest6} = str:to_int(Rest5, 10),
-
-		{Token3, Rest7} = str:tok(Rest6, <<":">>),
-		{Minute, _} = str:to_int(Token3, 10),
-
-		{Second, Rest8} = str:to_int(Rest7, 10),
-
-		{Tz, Rest9} = iso_time_zone(Rest8),
-
-		{{{Year, Month, Day}, {Hour, Minute, Second}, Tz}, Rest9}
-	catch
-		_ ->
-			badarg
-	end.
-
 iso_date_time(Bs) ->
 	try
-		case iso_date(Bs) of
-		{ Date, Rest1 } ->
-			case iso_time(Rest1) of
-			{ Time, Tz, Rest2 } ->
-				{ {Date, Time, Tz}, Rest2 };
-			badarg ->
-				{ {Date, {0,0,0}, time_zone_seconds()}, Rest1 }
-			end;
-		badarg ->
-			badarg
-		end
+		{Date, Rest1} = iso_date(Bs),
+		{Time, Tz, Rest2} = iso_time(Rest1),
+		{{Date, Time, Tz}, Rest2}
 	catch
+		% binary_to_integer/1 fails on non-digit.
 		error:badarg ->
+			badarg;
+		% iso_date/1 returned badarg.
+		error:{badmatch, badarg} ->
 			badarg
 	end.
 
@@ -655,55 +588,241 @@ iso_date(<<Year:4/bytes, $-, Month:2/bytes, $-, Day:2/bytes, Rest/binary>>) ->
 	{{binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)}, Rest};
 iso_date(<<Year:4/bytes, Month:2/bytes, Day:2/bytes, Rest/binary>>) ->
 	{{binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)}, Rest};
-iso_date(Bs) ->
+iso_date(_Other) ->
 	badarg.
 
 iso_time(<<$T, Hour:2/bytes, $:, Minute:2/bytes, $:, Second:2/bytes, Rest/binary>>) ->
-	{Tz, Rest1} = iso_time_zone(iso_time_fraction(Rest)),
+	{_, Tz, Rest1} = iso_time_zone(iso_time_fraction(Rest)),
 	{ {binary_to_integer(Hour), binary_to_integer(Minute), binary_to_integer(Second)}, Tz, Rest1 };
 iso_time(<<$T, Hour:2/bytes, Minute:2/bytes, Second:2/bytes, Rest/binary>>) ->
-	{Tz, Rest1} = iso_time_zone(iso_time_fraction(Rest)),
+	{_, Tz, Rest1} = iso_time_zone(iso_time_fraction(Rest)),
 	{ {binary_to_integer(Hour), binary_to_integer(Minute), binary_to_integer(Second)}, Tz, Rest1 };
-iso_time(Bs) ->
-	badarg.
+iso_time(Other) ->
+	{{0, 0, 0}, time_zone_seconds(), Other}.
 
-iso_time_fraction(<<>>) ->
-	<<>>;
 iso_time_fraction(<<$., Rest/binary>>) ->
-	iso_time_fraction(Rest);
+	{_, Rest1} = to_int(Rest, 10),
+	Rest1;
 iso_time_fraction(<<$,, Rest/binary>>) ->
-	iso_time_fraction(Rest);
-iso_time_fraction(<<Ch:8, Rest/binary>>) ->
-	case ctype:isdigit(Ch) of
-	true ->
-		iso_time_fraction(Rest);
-	false ->
-		<<Ch:8, Rest/binary>>
-	end.
+	{_, Rest1} = to_int(Rest, 10),
+	Rest1;
+iso_time_fraction(Other) ->
+	Other.
 
 iso_time_zone(<<>>) ->
-	{time_zone_seconds(), <<>>};
+	% Nothing to consume, assume local time zone.
+	{ok, time_zone_seconds(), <<>>};
 iso_time_zone(<<$Z, Rest/binary>>) ->
-	{0, Rest};
-iso_time_zone(Bs) ->
-	case iso_time_zone_(Bs) of
-	badarg ->
-		{time_zone_seconds(), Bs};
-	{TzSign, TzHr, TzMn, Rest} ->
-		{TzSign * (binary_to_integer(TzHr) * 3600 + binary_to_integer(TzMn) * 60), Rest}
-	end.
-iso_time_zone_(<<$ , Rest/binary>>) ->
-	iso_time_zone_(Rest);
-iso_time_zone_(<<$-, TzHr:2/bytes, $:, TzMn:2/bytes, Rest/binary>>) ->
-	{-1, TzHr, TzMn, Rest};
-iso_time_zone_(<<$+, TzHr:2/bytes, $:, TzMn:2/bytes, Rest/binary>>) ->
-	{1, TzHr, TzMn, Rest};
-iso_time_zone_(<<$-, TzHr:2/bytes, TzMn:2/bytes, Rest/binary>>) ->
-	{-1, TzHr, TzMn, Rest};
-iso_time_zone_(<<$+, TzHr:2/bytes, TzMn:2/bytes, Rest/binary>>) ->
-	{1, TzHr, TzMn, Rest};
-iso_time_zone_(Bs) ->
-	badarg.
+	{ok, 0, Rest};
+iso_time_zone(<<$-, TzHr:2/bytes, $:, TzMn:2/bytes, Rest/binary>>) ->
+	{ok, -1 * (binary_to_integer(TzHr) * 3600 + binary_to_integer(TzMn) * 60), Rest};
+iso_time_zone(<<$+, TzHr:2/bytes, $:, TzMn:2/bytes, Rest/binary>>) ->
+	{ok, (binary_to_integer(TzHr) * 3600 + binary_to_integer(TzMn) * 60), Rest};
+iso_time_zone(<<$-, TzHr:2/bytes, TzMn:2/bytes, Rest/binary>>) ->
+	{ok, -1 * (binary_to_integer(TzHr) * 3600 + binary_to_integer(TzMn) * 60), Rest};
+iso_time_zone(<<$+, TzHr:2/bytes, TzMn:2/bytes, Rest/binary>>) ->
+	{ok, (binary_to_integer(TzHr) * 3600 + binary_to_integer(TzMn) * 60), Rest};
+iso_time_zone(Other) ->
+	% No time zone parsed, assume local time zone.
+	{badarg, time_zone_seconds(), Other}.
+
+ptime(Bs, Fmt) ->
+	ptime(Bs, Fmt, {{undefined, undefined, undefined}, {undefined, undefined , undefined}, time_zone_seconds()}).
+ptime(Bs, <<>>, DateTimeTz) ->
+	{DateTimeTz, Bs};
+ptime(Bs, <<" ", Fmt/binary>>, DateTimeTz) ->
+	Span = spn(Bs, <<" \t\n\r\v\f">>),
+	case ptime(sub(Bs, Span), Fmt, DateTimeTz) of
+	{badarg, _} ->
+		{badarg, Bs};
+	DateTimeTz_Rest ->
+		DateTimeTz_Rest
+	end;
+ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, Minute, Second}, Tz}) ->
+	{ DateTimeTz, Rest1 } = case Ch of
+	$a ->
+		Span = cspn(Bs, <<", \t">>),
+		Token = sub(Bs, 0, Span),
+		case index_of(Token, [?WEEK_DAYS_SHORT, ?WEEK_DAYS_FULL]) of
+		notfound ->
+			{badarg, Bs};
+		_Index ->
+			{{Date, Time, Tz}, sub(Bs, Span)}
+		end;
+	$A ->
+		ptime(Bs, <<"%a">>);
+	$b ->
+		Span = cspn(Bs, <<" \t">>),
+		Token = sub(Bs, 0, Span),
+		case index_of(Token, [?MONTH_SHORT, ?MONTH_FULL]) of
+		notfound ->
+			{badarg, Bs};
+		Index ->
+			{{{Year, Index rem 12 + 1, Day}, Time, Tz}, sub(Bs, Span)}
+		end;
+	$B ->
+		ptime(Bs, <<"%b">>);
+	$c ->
+		ptime(Bs, <<"%e %b %Y %H:%M:%S">>);
+	$C ->
+		case to_int(sub(Bs, 0, 2), 10) of
+		{Century, _} when 0 =< Century andalso Century =< 99 ->
+			{{{Century * 100, Month, Day}, Time, Tz}, sub(Bs, 2)};
+		_ ->
+			{badarg, Bs}
+		end;
+	$d ->
+		case to_int(Bs, 10) of
+		{NewDay, Rest} when 1 =< NewDay andalso NewDay =< 31 ->
+			{{{Year, Month, NewDay}, Time, Tz}, Rest};
+		_ ->
+			{badarg, Bs}
+		end;
+	$D ->
+		ptime(Bs, <<"%m/%d/%y">>);
+	$e ->
+		ptime(Bs, <<"%d">>);
+	$F ->
+		ptime(Bs, <<"%Y-%m-%d">>);
+	$G ->
+		throw({error, not_supported});
+	$g ->
+		throw({error, not_supported});
+	$h ->
+		ptime(Bs, <<"%b">>);
+	$H ->
+		case to_int(Bs, 10) of
+		{NewHour, Rest} when 0 =< NewHour andalso NewHour =< 23 ->
+			{{Date, {NewHour, Minute, Second}, Tz}, Rest};
+		_ ->
+			{badarg, Bs}
+		end;
+	$I ->
+		case to_int(Bs, 10) of
+		{NewHour, Rest} when 1 =< NewHour andalso NewHour =< 12 ->
+			{{Date, {NewHour, Minute, Second}, Tz}, Rest};
+		_ ->
+			{badarg, Bs}
+		end;
+	$k ->
+		ptime(Bs, <<"%H">>);
+	$l ->
+		ptime(Bs, <<"%I">>);
+	$j ->
+		case to_int(Bs, 10) of
+		{DayOfYear, Rest} when 1 =< DayOfYear andalso DayOfYear =< 366 ->
+			%% Incomplete
+			{{Date, Time, Tz}, Rest};
+		_ ->
+			{badarg, Bs}
+		end;
+	$m ->
+		case to_int(Bs, 10) of
+		{NewMonth, Rest} when 1 =< NewMonth andalso NewMonth =< 12 ->
+			{{{Year, NewMonth, Day}, Time, Tz}, Rest};
+		_ ->
+			{badarg, Bs}
+		end;
+	$M ->
+		case to_int(Bs, 10) of
+		{NewMinute, Rest} when 0 =< NewMinute andalso NewMinute =< 59 ->
+			{{Date, {Hour, NewMinute, Second}, Tz}, Rest};
+		_ ->
+			{badarg, Bs}
+		end;
+	$n ->
+		Span = spn(Bs, <<" \t\r\n\f\v">>),
+		{{Date, Time, Tz}, sub(Bs, Span)};
+	$p ->
+		Span = cspn(Bs, <<" \t">>),
+		Rest = sub(Bs, Span),
+		case sub(Bs, 0, Span) of
+		<<"am">> ->
+			{{Date, Time, Tz}, Rest};
+		<<"pm">> when 0 < Hour andalso Hour =< 12->
+			{{Date, {(Hour + 12) rem 24, Minute, Second}, Tz}, Rest};
+		<<"pm">> ->
+			{{Date, Time, Tz}, Rest};
+		_ ->
+			{badarg, Bs}
+		end;
+	$r ->
+		ptime(Bs, <<"%l:%M %p">>);
+	$R ->
+		ptime(Bs, <<"%H:%M">>);
+	$S ->
+		case to_int(Bs, 10) of
+		{NewSecond, Rest} when 0 =< NewSecond andalso NewSecond =< 61 ->
+			{{Date, {Hour, Minute, NewSecond}, Tz}, Rest};
+		_ ->
+			{badarg, Bs}
+		end;
+	$s ->
+		{EpochSec, Rest} = to_int(Bs, 10),
+		Timestamp = {EpochSec div 1000000, EpochSec rem 1000000, 0},
+		{NewDate, NewTime} = calendar:now_to_local_time(Timestamp),
+		{{NewDate, NewTime, time_zone_seconds()}, Rest};
+	$t ->
+		Span = spn(Bs, <<" \t\r\n\f\v">>),
+		{{Date, Time, Tz}, sub(Bs, Span)};
+	$T ->
+		ptime(Bs, <<"%H:%M:%S">>);
+	$U ->
+		throw({error, not_supported});
+	$u ->
+		throw({error, not_supported});
+	$V ->
+		throw({error, not_supported});
+	$v ->
+		throw({error, not_supported});
+	$W ->
+		throw({error, not_supported});
+	$w ->
+		throw({error, not_supported});
+	$X ->
+		throw({error, not_supported});
+	$x ->
+		throw({error, not_supported});
+	$Y ->
+		{NewYear, Rest} = to_int(Bs, 10),
+		{{{NewYear, Month, Day}, Time, Tz}, Rest};
+	$y ->
+		% http://pubs.opengroup.org/onlinepubs/9699919799/
+		case to_int(sub(Bs, 0, 2), 10) of
+		{Value, _} when 0 =< Value andalso Value =< 99 ->
+			NewYear = if
+			Value =< 68 -> 2000 + Value;
+			Value  > 68 -> 1900 + Value
+			end,
+			{{{NewYear, Month, Day}, Time, Tz}, sub(Bs, 2)};
+		_ ->
+			{badarg, Bs}
+		end;
+	$Z ->
+		throw({error, not_supported});
+	$z ->
+		case iso_time_zone(Bs) of
+		{ok, NewTz, Rest} ->
+io:format("zone ~w [~s][~s]~n", [NewTz, Bs, Rest]),
+			{{Date, Time, NewTz}, Rest};
+		{badarg, NewTz, _} ->
+io:format("zone err ~w [~s]~n", [NewTz, Bs]),
+			{badarg, Bs}
+		end;
+	$% ->
+		<<Pct:8, Rest/binary>> = Bs,
+		if
+		Pct /= $% ->
+			{badarg, Bs};
+		Pct == $% ->
+			{{Date, Time, Tz}, Rest}
+		end
+	end,
+	ptime(Rest1, Fmt, DateTimeTz);
+ptime(<<Ch:8, Rest/binary>>, <<Ch:8, Fmt/binary>>, DateTimeTz) ->
+	ptime(Rest, Fmt, DateTimeTz);
+ptime(Bs, _Fmt, _DateTimeTz) ->
+	{badarg, Bs}.
 
 %%
 %% These will move to another module (eventually).
