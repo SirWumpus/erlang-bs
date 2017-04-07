@@ -5,7 +5,7 @@
 	error/1, len/1, rev/1, ltrim/1, rtrim/1, trim/1, spn/2, cspn/2, sub/2,
 	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
 	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2,
-	ptime/2, to_date_time/1
+	ptime/2, to_date_time/1, str/2, casestr/2
 ]).
 
 -ifdef(EUNIT).
@@ -831,6 +831,40 @@ index_of_word(Word, [Head | Tail], Index) ->
 		Index;
 	_ ->
 		index_of_word(Word, Tail, Index + 1)
+	end.
+
+str(Bs, Pattern) ->
+	str(Bs, Pattern, Bs, Pattern, 0).
+str(_Bs, _Pattern, _, <<>>, Index) ->
+	% Reached end of pattern.
+	Index;
+str(<<>>, _Pattern, _, _, _) ->
+	% Reached end of string before end of pattern.
+	-1;
+str(Bs, Pattern, <<Ch:8, Next/binary>>, <<Ch:8, Pat/binary>>, Index) ->
+	% Matched characters, advance pattern.
+	str(Bs, Pattern, Next, Pat, Index);
+str(<<_:8, Rest/binary>>, Pattern, _, _, Index) ->
+	% Mismatched characters, reset pattern.
+	str(Rest, Pattern, Rest, Pattern, Index + 1).
+
+casestr(Bs, Pattern) ->
+	casestr(Bs, Pattern, Bs, Pattern, 0).
+casestr(_Bs, _Pattern, _, <<>>, Index) ->
+	% Reached end of pattern.
+	Index;
+casestr(<<>>, _Pattern, _, _, _) ->
+	% Reached end of string before end of pattern.
+	-1;
+casestr(Bs, Pattern, <<Ach:8, Next/binary>>, <<Bch:8, Pat/binary>>, Index) ->
+	UpperA = ctype:toupper(Ach),
+	UpperB = ctype:toupper(Bch),
+	if
+		UpperA == UpperB ->
+			casestr(Bs, Pattern, Next, Pat, Index);
+		UpperA /= UpperB ->
+			<<_:8, Rest/binary>> = Bs,
+			casestr(Rest, Pattern, Rest, Pattern, Index + 1)
 	end.
 
 %%

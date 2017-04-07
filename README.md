@@ -91,7 +91,11 @@ Return index of first occurrence of character in the binary string; otherwise -1
 
 - - -
 ### str:casecmp(Bs1, Bs2) -> integer()
-Return an integer greater than, equal to, or less than 0 according to whether caseless binary string Bs1 is greater than, equal to, or less than caseless binary string Bs2.
+Return an integer greater than, equal to, or less than 0 according to whether case-less binary string Bs1 is greater than, equal to, or less than case-less binary string Bs2.
+
+- - -
+### str:casestr(Bs, Pattern) -> Index | -1
+Return the index of the first occurence of the case-less Pattern in Bs; otherwise -1 if not found.
 
 - - -
 ### str:cmp(Bs1, Bs2) -> integer() 
@@ -193,7 +197,7 @@ Return a binary string converted to lower case.
 
 - - -
 ### str:ncasecmp(Bs1, Bs2, Length) -> integer() 
-Return an integer greater than, equal to, or less than 0 according to whether caseless binary string Bs1 is greater than, equal to, or less than caseless binary string Bs2, comparing at most Length octets.
+Return an integer greater than, equal to, or less than 0 according to whether case-less binary string Bs1 is greater than, equal to, or less than case-less binary string Bs2, comparing at most Length octets.
 
 - - -
 ### str:ncat(Bs1, Bs2, Length) -> Bs
@@ -300,6 +304,10 @@ Remove trailing whitespace from a binary string.
 - - -
 ### str:spn(Bs, Delims) -> Length
 Return the number of leading delimiters in the binary string.
+
+- - -
+### str:str(Bs, Pattern) -> Index | -1
+Return the index of the first occurence of Pattern in Bs; otherwise -1 if not found.
 
 - - -
 ### str:sub(Bs, Start) -> Bs  

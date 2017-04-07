@@ -517,3 +517,27 @@ to_date_time_test_() ->
 	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Saturday, April 1 18:09:23 2017 -0330 boo!">>))
 	].
 
+str_test_() ->
+	[
+        ?_assertMatch(0, str:str(<<>>, <<>>)),
+        ?_assertMatch(0, str:str(<<"Joey Bloggs">>, <<>>)),
+        ?_assertMatch(0, str:str(<<"Joey Bloggs">>, <<"Joey">>)),
+        ?_assertMatch(5, str:str(<<"Joey Bloggs">>, <<"Blog">>)),
+        ?_assertMatch(8, str:str(<<"Joey Bloggs">>, <<"ggs">>)),
+        ?_assertMatch(-1, str:str(<<"Joey Bloggs">>, <<"ABC">>)),
+        ?_assertMatch(-1, str:str(<<"Joey Bloggs">>, <<"blog">>)),
+        ?_assertMatch(-1, str:str(<<"Joey Bloggs">>, <<"BLOG">>))
+	].
+
+casestr_test_() ->
+	[
+        ?_assertMatch(0, str:casestr(<<>>, <<>>)),
+        ?_assertMatch(0, str:casestr(<<"Joey Bloggs">>, <<>>)),
+        ?_assertMatch(0, str:casestr(<<"Joey Bloggs">>, <<"Joey">>)),
+        ?_assertMatch(5, str:casestr(<<"Joey Bloggs">>, <<"Blog">>)),
+        ?_assertMatch(8, str:casestr(<<"Joey Bloggs">>, <<"GGS">>)),
+        ?_assertMatch(-1, str:casestr(<<"Joey Bloggs">>, <<"ABC">>)),
+        ?_assertMatch(5, str:casestr(<<"Joey Bloggs">>, <<"blog">>)),
+        ?_assertMatch(5, str:casestr(<<"Joey Bloggs">>, <<"BLOG">>))
+	].
+
