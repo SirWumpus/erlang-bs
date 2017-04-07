@@ -493,7 +493,6 @@ ptime_test_() ->
 	?_assertMatch({{?UNDEFINED,{20,35,43},-12600}, <<" boo!">>}, str:ptime(<<"20:35:43 -0330 boo!">>,<<"%T %z">>))
 	].
 
--ifdef(testall).
 to_date_time_test_() ->
 	[
 	?_assertMatch({badarg, <<>>}, str:to_date_time(<<>>)),
@@ -515,5 +514,4 @@ to_date_time_test_() ->
 	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Sat, Apr 1 18:09:23 2017 -03:30 boo!">>)),
 	?_assertMatch({{{2017, 4, 1},{18, 09, 23},-12600}, <<" boo!">>}, str:to_date_time(<<"Saturday, April 1 18:09:23 2017 -0330 boo!">>))
 	].
--endif.
 

@@ -271,7 +271,7 @@ Whitespace matches zero or more whitespace characters and ordinary characters ma
 
 **%Y** the year, including the century (i.e., 1996).
 
-**%z** an ISO 8601 or RFC-2822 timezone specification.  This is one of the following: the offset from Universal Time Coordinate (`UTC') specified as: ``[+-]hhmm'', ``[+-]hh:mm''.
+**%z** an ISO 8601 or RFC-2822 timezone specification.  This is one of the following: the offset from Universal Time Coordinate (`UTC') specified as: "[+-]hh[:]mm".
 
 **%%** matches a literal `%'.  No argument is converted.
 

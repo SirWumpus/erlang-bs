@@ -557,7 +557,6 @@ to_date_time(Bs) ->
 to_date_time(Bs, []) ->
 	{badarg, Bs};
 to_date_time(Bs, [Fmt | Tail]) ->
-io:format("fmt=~s~n", [Fmt]),
 	case ptime(Bs, Fmt) of
 	{badarg, _Rest} ->
 		to_date_time(Bs, Tail);
@@ -803,10 +802,8 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 	$z ->
 		case iso_time_zone(Bs) of
 		{ok, NewTz, Rest} ->
-io:format("zone ~w [~s][~s]~n", [NewTz, Bs, Rest]),
 			{{Date, Time, NewTz}, Rest};
 		{badarg, NewTz, _} ->
-io:format("zone err ~w [~s]~n", [NewTz, Bs]),
 			{badarg, Bs}
 		end;
 	$% ->
