@@ -549,7 +549,9 @@ to_date_time(Bs) ->
 			<<"%a %b %d %H:%M:%S %Y %z">>,
 			<<"%a %b %d %H:%M:%S %Y">>,	%% ctime() format.
 			<<"%b %d %H:%M:%S %Y %z">>,
-			<<"%b %d %H:%M:%S %Y">>
+			<<"%b %d %H:%M:%S %Y">>,
+
+			<<"%s">>			%% Epoch seconds.
 		]);
 	DateTimeTz_Rest ->
 		DateTimeTz_Rest
@@ -757,10 +759,14 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			{badarg, Bs}
 		end;
 	$s ->
-		{EpochSec, Rest} = to_int(Bs, 10),
-		Timestamp = {EpochSec div 1000000, EpochSec rem 1000000, 0},
-		{NewDate, NewTime} = calendar:now_to_local_time(Timestamp),
-		{{NewDate, NewTime, time_zone_seconds()}, Rest};
+		case to_int(Bs, 10) of
+		{EpochSec, Rest} ->
+			Timestamp = {EpochSec div 1000000, EpochSec rem 1000000, 0},
+			{NewDate, NewTime} = calendar:now_to_local_time(Timestamp),
+			{{NewDate, NewTime, time_zone_seconds()}, Rest};
+		_ ->
+			{badarg, Bs}
+		end;
 	$t ->
 		Span = spn(Bs, <<" \t\r\n\f\v">>),
 		{{Date, Time, Tz}, sub(Bs, Span)};
