@@ -10,6 +10,7 @@ Data Types
 * Bs = <<"...">>
 * Ch = ascii().
 * Delims = <<"...">>
+* Fmt = <<"...">>
 * Index = integer() >= 0
 * Length = integer() >= 0
 * Date = { Year, Month, Day }
@@ -212,14 +213,15 @@ Return a binary string with the signed decimal integer right justified to the mi
 
 - - -
 ### str:ptime(Bs, Fmt) -> { {Date, Time, Tz}, << Rest >> } | {badarg, << Rest >>}
+Parse the leading date-time of Bs according to Fmt and return a date-time-tz tuple and the remainder of the string not consumed.  If a time zone conversion is not specified in the Fmt, then the local time zone of the user ($TZ) or system is assumed.  If there is a parse error, badarg and remainder of the binary string where the parse failed is returned.
 
-Whitespace matches zero or more whitespace characters and ordinary characters match themselves.
+The format string consists of zero or more conversion specifications, whitespace characters as defined by `ctype:isspace()`, and ordinary characters.  Whitespace matches zero or more whitespace characters and ordinary characters match themselves.  The following `%` format conversions are supportted:
 
-**%a** the day of week, using ~~the locale's~~ English weekday names; either the abbreviated or full name may be specified.
+**%a** the day of week, using ~~the locale's~~ English weekday names; either the abbreviated or full name may be specified.  Case is ignored.
 
 **%A** the same as %a.
 
-**%b** the month, using ~~the locale's~~ English month names; either the abbreviated or full name may be specified.
+**%b** the month, using ~~the locale's~~ English month names; either the abbreviated or full name may be specified.  Case is ignored.
 
 **%B** the same as %b.
 
@@ -253,7 +255,7 @@ Whitespace matches zero or more whitespace characters and ordinary characters ma
 
 **%n** any white-space, including none.
 
-**%p** ~~the locale's equivalent of~~ a.m. or p.m.
+**%p** ~~the locale's equivalent of~~ AM or PM.  Case is ignored.
 
 **%r** the time (12-hour clock) with %p, ~~using the locale's time format~~ ``%l:%M %p''.
 
@@ -267,7 +269,7 @@ Whitespace matches zero or more whitespace characters and ordinary characters ma
 
 **%T** the time as %H:%M:%S.
 
-**%y** the year within the 20th century [69,99] or the 21st century [0,68]; leading zeros are permitted but not required.  If specified in conjunction with %C, specifies the year [0,99] within that century.
+**%y** the year within the 20th century [69,99] (1969..1999) or the 21st century [0,68] (2000..2068); leading zeros are permitted but not required.
 
 **%Y** the year, including the century (i.e., 1996).
 

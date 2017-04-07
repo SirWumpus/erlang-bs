@@ -11,7 +11,7 @@
 -ifdef(EUNIT).
 -export([
 	time_to_epoch_seconds/1, time_zone_seconds/0, iso_date_time/1,
-	index_of/2
+	index_of_word/2
 ]).
 -endif.
 
@@ -642,7 +642,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 	$a ->
 		Span = cspn(Bs, <<", \t">>),
 		Token = sub(Bs, 0, Span),
-		case index_of(Token, [?WEEK_DAYS_SHORT, ?WEEK_DAYS_FULL]) of
+		case index_of_word(Token, [?WEEK_DAYS_SHORT, ?WEEK_DAYS_FULL]) of
 		notfound ->
 			{badarg, Bs};
 		_Index ->
@@ -653,7 +653,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 	$b ->
 		Span = cspn(Bs, <<" \t">>),
 		Token = sub(Bs, 0, Span),
-		case index_of(Token, [?MONTH_SHORT, ?MONTH_FULL]) of
+		case index_of_word(Token, [?MONTH_SHORT, ?MONTH_FULL]) of
 		notfound ->
 			{badarg, Bs};
 		Index ->
@@ -735,12 +735,12 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 	$p ->
 		Span = cspn(Bs, <<" \t">>),
 		Rest = sub(Bs, Span),
-		case sub(Bs, 0, Span) of
-		<<"am">> ->
+		case index_of_word(sub(Bs, 0, Span), [<<"am">>, <<"pm">>]) of
+		0 ->
 			{{Date, Time, Tz}, Rest};
-		<<"pm">> when 0 < Hour andalso Hour =< 12->
+		1 when 0 < Hour andalso Hour =< 12->
 			{{Date, {(Hour + 12) rem 24, Minute, Second}, Tz}, Rest};
-		<<"pm">> ->
+		1 ->
 			{{Date, Time, Tz}, Rest};
 		_ ->
 			{badarg, Bs}
@@ -803,7 +803,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 		case iso_time_zone(Bs) of
 		{ok, NewTz, Rest} ->
 			{{Date, Time, NewTz}, Rest};
-		{badarg, NewTz, _} ->
+		{badarg, _NewTz, _} ->
 			{badarg, Bs}
 		end;
 	$% ->
@@ -821,6 +821,18 @@ ptime(<<Ch:8, Rest/binary>>, <<Ch:8, Fmt/binary>>, DateTimeTz) ->
 ptime(Bs, _Fmt, _DateTimeTz) ->
 	{badarg, Bs}.
 
+index_of_word(Word, List) ->
+	index_of_word(Word, List, 0).
+index_of_word(_, [], _) ->
+	notfound;
+index_of_word(Word, [Head | Tail], Index) ->
+	case casecmp(Word, Head) of
+	0 ->
+		Index;
+	_ ->
+		index_of_word(Word, Tail, Index + 1)
+	end.
+
 %%
 %% These will move to another module (eventually).
 %%
@@ -832,13 +844,3 @@ time_zone_seconds() ->
 	Local = erlang:localtime(),
 	Utc = erlang:localtime_to_universaltime(Local),
 	time_to_epoch_seconds(Local) - time_to_epoch_seconds(Utc).
-
-index_of(Item, List) ->
-	index_of(Item, List, 0).
-index_of(_, [], _)  ->
-	notfound;
-index_of(Item, [Item|_], Index) ->
-	Index;
-index_of(Item, [_|Tl], Index) ->
-	index_of(Item, Tl, Index + 1).
-
