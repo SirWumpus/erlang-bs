@@ -9,10 +9,22 @@ to_epoch_seconds_test_() ->
 
 to_utc_seconds_test_() ->
 	[
-	?_assertMatch(0, dtz:to_utc_seconds({{1970,1,1}, {3,30,0}, +12600}))
+	?_assertMatch(0, dtz:to_utc_seconds({{1970,1,1}, {3,30,0}, +12600})),
+	?_assertMatch(12600, dtz:to_utc_seconds({{1970,1,1}, {0,00,0}, -12600}))
 	].
 
 to_utc_test_() ->
 	[
-	?_assertMatch({{1970,1,1}, {0,0,0}, 0}, dtz:to_utc({{1970,1,1}, {3,30,0}, +12600}))
+	?_assertMatch({{1970,1,1}, {0,0,0}, 0}, dtz:to_utc({{1970,1,1}, {3,30,0}, +12600})),
+	?_assertMatch({{1970,1,1}, {3,30,0}, 0}, dtz:to_utc({{1970,1,1}, {0,0,0}, -12600}))
+	].
+
+%%
+%% Assumes TZ=+03:30
+%%
+to_local_test_() ->
+	[
+	?_assertMatch({{1970,1,1}, {3,30,0}, -12600}, dtz:to_local({{1970,1,1}, {3,30,0}, -12600})),
+	?_assertMatch({{1970,1,1}, {0,0,0}, -12600}, dtz:to_local({{1970,1,1}, {3,30,0}, 0})),
+	?_assertMatch({{1969,12,31}, {23,30,0}, -12600}, dtz:to_local({{1970,1,1}, {3,30,0}, +1800}))
 	].

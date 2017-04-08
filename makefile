@@ -29,7 +29,7 @@ tar:
 test: unit
 
 unit:
-	rebar3 eunit --cover
+	TZ=+03:30 rebar3 eunit --cover
 	rebar3 cover
 
 cover: unit
