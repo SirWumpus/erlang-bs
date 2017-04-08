@@ -217,7 +217,7 @@ Return a binary string with the signed decimal integer right justified to the mi
 
 - - -
 ### str:ptime(Bs, Fmt) -> { {Date, Time, Tz}, << Rest >> } | {badarg, << Rest >>}
-Parse the leading date-time of Bs according to Fmt and return a date-time-tz tuple and the remainder of the string not consumed.  If a time zone conversion is not specified in the Fmt, then the local time zone of the user ($TZ) or system is assumed.  If there is a parse error, badarg and remainder of the binary string where the parse failed is returned.
+Parse the leading date-time of Bs according to Fmt and return a date-time-tz tuple and the remainder of the string not consumed.  If a time zone conversion is not specified in the Fmt, then the local time zone of the user's $TZ or system is assumed.  If there is a parse error, badarg and remainder of the binary string where the parse failed is returned.
 
 The format string consists of zero or more conversion specifications, whitespace characters as defined by `ctype:isspace()`, and ordinary characters.  Whitespace matches zero or more whitespace characters and ordinary characters match themselves.  The following `%` format conversions are supportted:
 

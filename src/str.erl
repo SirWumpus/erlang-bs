@@ -4,14 +4,13 @@
 	at/2, cat/2, ncat/3, cmp/2, ncmp/3, cpy/1, ncpy/2, chr/2, rchr/2,
 	error/1, len/1, rev/1, ltrim/1, rtrim/1, trim/1, spn/2, cspn/2, sub/2,
 	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
-	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2,
+	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2, to_int/3,
 	ptime/2, to_date_time/1, str/2, casestr/2
 ]).
 
 -ifdef(EUNIT).
 -export([
-	time_to_epoch_seconds/1, time_zone_seconds/0, iso_date_time/1,
-	index_of_word/2
+	iso_date_time/1, index_of_word/2
 ]).
 -endif.
 
@@ -334,7 +333,7 @@ tr(<<Ch:8, Rest/binary>>, FromSet, ToSet, Acc) ->
 -define(MONTH_SHORT, <<"Jan">>,<<"Feb">>,<<"Mar">>,<<"Apr">>,<<"May">>,<<"Jun">>,<<"Jul">>,<<"Aug">>,<<"Sep">>,<<"Oct">>,<<"Nov">>,<<"Dec">>).
 
 ftime(Fmt, {Date, Time}) ->
-	ftime(Fmt, {Date, Time, time_zone_seconds()});
+	ftime(Fmt, {Date, Time, dtz:time_zone_seconds()});
 ftime(Fmt, {Date, Time, Tz}) ->
 	ftime(Fmt, {Date, Time, Tz}, <<>>).
 ftime(<<>>, _DateTime, Acc) ->
@@ -422,8 +421,8 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time, Tz}, Acc) ->
 		Seconds = pad_int(Sec, $0, 2),
 		<<Acc/binary, Seconds/binary>>;
 	$s ->
-		Epoch = integer_to_binary(time_to_epoch_seconds({Date, Time})),
-		<<Acc/binary, Epoch/binary>>;
+		UTC = integer_to_binary(dtz:to_utc_seconds({Date, Time, Tz})),
+		<<Acc/binary, UTC/binary>>;
 	$T ->
 		IsoTime = ftime(<<"%H:%M:%S">>, {Date, Time, Tz}),
 		<<Acc/binary, IsoTime/binary>>;
@@ -498,34 +497,43 @@ pad_sign_int(Int, Pad, Width) ->
 	Num = integer_to_binary(Int),
 	lpad(<<$+, Num/binary>>, Pad, Width).
 
-to_int(<<"0x", Rest/binary>>, Base) when Base == 0 orelse Base == 16 ->
-	to_int(Rest, 16, 0, 1, false);
-to_int(<<"0", Rest/binary>>, 0) ->
-	to_int(Rest, 8, 0, 1, false);
-to_int(Bs, 0) ->
-	to_int(Bs, 10);
-to_int(<<$ , Rest/binary>>, Base) ->
-	to_int(Rest, Base);
-to_int(<<$-, Rest/binary>>, 10) ->
-	to_int(Rest, 10, 0, -1, false);
-to_int(<<$+, Rest/binary>>, 10) ->
-	to_int(Rest, 10, 0, 1, false);
 to_int(Bs, Base) ->
-	to_int(Bs, Base, 0, 1, false).
-to_int(<<>>, _Base, _Acc, _Sign, false) ->
+	to_int(Bs, Base, -1).
+
+to_int(<<"0x", Rest/binary>>, Base, MaxDigits) when Base == 0 orelse Base == 16 ->
+	to_int(Rest, 16, MaxDigits, 0, 1, 0);
+to_int(<<"0", Rest/binary>>, 0, MaxDigits) ->
+	to_int(Rest, 8, MaxDigits, 0, 1, 0);
+to_int(Bs, 0, MaxDigits) ->
+	to_int(Bs, 10, MaxDigits);
+to_int(<<$ , Rest/binary>>, Base, MaxDigits) ->
+	to_int(Rest, Base, MaxDigits);
+to_int(<<$-, Rest/binary>>, 10, MaxDigits) ->
+	to_int(Rest, 10, MaxDigits, 0, -1, 0);
+to_int(<<$+, Rest/binary>>, 10, MaxDigits) ->
+	to_int(Rest, 10, MaxDigits, 0, 1, 0);
+to_int(Bs, Base, MaxDigits) ->
+	to_int(Bs, Base, MaxDigits, 0, 1, 0).
+
+to_int(<<>>, _Base, _MaxDigits, _Acc, _Sign, 0) ->
+	% No digits found.
 	badarg;
-to_int(<<>>, _Base, Acc, Sign, true) ->
+to_int(<<>>, _Base, _MaxDigits, Acc, Sign, _Ndigits) ->
+	% End of string.
 	{ Sign * Acc, <<>> };
-to_int(<<Ch:8, Rest/binary>>, Base, Acc, Sign, Has_digits) ->
+to_int(Bs, _Base, MaxDigits, Acc, Sign, MaxDigits) ->
+	% MaxDigits consumed.
+	{ Sign * Acc, Bs };
+to_int(<<Ch:8, Rest/binary>>, Base, MaxDigits, Acc, Sign, Ndigits) ->
 	case ctype:isbase(Ch, Base) of
 	true ->
 		case ctype:isdigit(Ch) of
 		true ->
-			to_int(Rest, Base, Acc * Base + (Ch - $0), Sign, true);
+			to_int(Rest, Base, MaxDigits, Acc * Base + (Ch - $0), Sign, Ndigits+1);
 		false ->
-			to_int(Rest, Base, Acc * Base + (10 + ctype:toupper(Ch) - $A), Sign, true)
+			to_int(Rest, Base, MaxDigits, Acc * Base + (10 + ctype:toupper(Ch) - $A), Sign, Ndigits+1)
 		end;
-	false when Has_digits ->
+	false when 0 < Ndigits ->
 		{ Sign * Acc, <<Ch:8, Rest/binary>> };
 	false ->
 		badarg
@@ -542,6 +550,7 @@ to_date_time(Bs) ->
 			<<"%a %d %b %Y %H:%M:%S">>,
 			<<"%d %b %Y %H:%M:%S %z">>,
 			<<"%d %b %Y %H:%M:%S">>,
+			<<"%d %b %Y">>,
 
 			%% ctime() variants
 			<<"%a, %b %d %H:%M:%S %Y %z">>,
@@ -551,14 +560,25 @@ to_date_time(Bs) ->
 			<<"%b %d %H:%M:%S %Y %z">>,
 			<<"%b %d %H:%M:%S %Y">>,
 
-			<<"%s">>			%% Epoch seconds.
+			%% Partial date or time.
+			<<"%b %d, %Y">>,
+			<<"%b %d %Y">>,
+%			<<"%H:%M:%S %z">>,
+			<<"%H:%M:%S">>,
+%			<<"%H:%M %z">>,
+			<<"%H:%M">>,
+%			<<"%H %M %S %z">>,
+			<<"%H %M %S">>,
+%			<<"%H %M %z">>,
+			<<"%H %M">>
 		]);
 	DateTimeTz_Rest ->
 		DateTimeTz_Rest
 	end.
-to_date_time(Bs, []) ->
-	{badarg, Bs};
+to_date_time(_Bs, []) ->
+	badarg;
 to_date_time(Bs, [Fmt | Tail]) ->
+%io:format("fmt=~s~n", [Fmt]),
 	case ptime(Bs, Fmt) of
 	{badarg, _Rest} ->
 		to_date_time(Bs, Tail);
@@ -599,7 +619,7 @@ iso_time(<<$T, Hour:2/bytes, Minute:2/bytes, Second:2/bytes, Rest/binary>>) ->
 	{_, Tz, Rest1} = iso_time_zone(iso_time_fraction(Rest)),
 	{ {binary_to_integer(Hour), binary_to_integer(Minute), binary_to_integer(Second)}, Tz, Rest1 };
 iso_time(Other) ->
-	{{0, 0, 0}, time_zone_seconds(), Other}.
+	{{0, 0, 0}, dtz:time_zone_seconds(), Other}.
 
 iso_time_fraction(<<$., Rest/binary>>) ->
 	{_, Rest1} = to_int(Rest, 10),
@@ -612,7 +632,7 @@ iso_time_fraction(Other) ->
 
 iso_time_zone(<<>>) ->
 	% Nothing to consume, assume local time zone.
-	{ok, time_zone_seconds(), <<>>};
+	{ok, dtz:time_zone_seconds(), <<>>};
 iso_time_zone(<<$Z, Rest/binary>>) ->
 	{ok, 0, Rest};
 iso_time_zone(<<$-, TzHr:2/bytes, $:, TzMn:2/bytes, Rest/binary>>) ->
@@ -625,10 +645,11 @@ iso_time_zone(<<$+, TzHr:2/bytes, TzMn:2/bytes, Rest/binary>>) ->
 	{ok, (binary_to_integer(TzHr) * 3600 + binary_to_integer(TzMn) * 60), Rest};
 iso_time_zone(Other) ->
 	% No time zone parsed, assume local time zone.
-	{badarg, time_zone_seconds(), Other}.
+	{badarg, dtz:time_zone_seconds(), Other}.
 
 ptime(Bs, Fmt) ->
-	ptime(Bs, Fmt, {{undefined, undefined, undefined}, {undefined, undefined , undefined}, time_zone_seconds()}).
+	{Date, _} = calendar:local_time(),
+	ptime(Bs, Fmt, {Date, {0, 0, 0}, dtz:time_zone_seconds()}).
 ptime(Bs, <<>>, DateTimeTz) ->
 	{DateTimeTz, Bs};
 ptime(Bs, <<" ", Fmt/binary>>, DateTimeTz) ->
@@ -642,7 +663,7 @@ ptime(Bs, <<" ", Fmt/binary>>, DateTimeTz) ->
 ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, Minute, Second}, Tz}) ->
 	{ DateTimeTz, Rest1 } = case Ch of
 	$a ->
-		Span = cspn(Bs, <<", \t">>),
+		Span = cspn(Bs, <<", \t\n\r\v\f">>),
 		Token = sub(Bs, 0, Span),
 		case index_of_word(Token, [?WEEK_DAYS_SHORT, ?WEEK_DAYS_FULL]) of
 		notfound ->
@@ -653,7 +674,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 	$A ->
 		ptime(Bs, <<"%a">>);
 	$b ->
-		Span = cspn(Bs, <<" \t">>),
+		Span = cspn(Bs, <<" \t\n\r\v\f">>),
 		Token = sub(Bs, 0, Span),
 		case index_of_word(Token, [?MONTH_SHORT, ?MONTH_FULL]) of
 		notfound ->
@@ -673,10 +694,10 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			{badarg, Bs}
 		end;
 	$d ->
-		case to_int(Bs, 10) of
+		case to_int(Bs, 10, 2) of
 		{NewDay, Rest} when 1 =< NewDay andalso NewDay =< 31 ->
 			{{{Year, Month, NewDay}, Time, Tz}, Rest};
-		_ ->
+		_Other ->
 			{badarg, Bs}
 		end;
 	$D ->
@@ -692,7 +713,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 	$h ->
 		ptime(Bs, <<"%b">>);
 	$H ->
-		case to_int(Bs, 10) of
+		case to_int(Bs, 10, 2) of
 		{NewHour, Rest} when 0 =< NewHour andalso NewHour =< 23 ->
 			{{Date, {NewHour, Minute, Second}, Tz}, Rest};
 		_ ->
@@ -710,7 +731,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 	$l ->
 		ptime(Bs, <<"%I">>);
 	$j ->
-		case to_int(Bs, 10) of
+		case to_int(Bs, 10, 3) of
 		{DayOfYear, Rest} when 1 =< DayOfYear andalso DayOfYear =< 366 ->
 			%% Incomplete
 			{{Date, Time, Tz}, Rest};
@@ -718,14 +739,14 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			{badarg, Bs}
 		end;
 	$m ->
-		case to_int(Bs, 10) of
+		case to_int(Bs, 10, 2) of
 		{NewMonth, Rest} when 1 =< NewMonth andalso NewMonth =< 12 ->
 			{{{Year, NewMonth, Day}, Time, Tz}, Rest};
 		_ ->
 			{badarg, Bs}
 		end;
 	$M ->
-		case to_int(Bs, 10) of
+		case to_int(Bs, 10, 2) of
 		{NewMinute, Rest} when 0 =< NewMinute andalso NewMinute =< 59 ->
 			{{Date, {Hour, NewMinute, Second}, Tz}, Rest};
 		_ ->
@@ -752,7 +773,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 	$R ->
 		ptime(Bs, <<"%H:%M">>);
 	$S ->
-		case to_int(Bs, 10) of
+		case to_int(Bs, 10, 2) of
 		{NewSecond, Rest} when 0 =< NewSecond andalso NewSecond =< 61 ->
 			{{Date, {Hour, Minute, NewSecond}, Tz}, Rest};
 		_ ->
@@ -760,10 +781,10 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 		end;
 	$s ->
 		case to_int(Bs, 10) of
-		{EpochSec, Rest} ->
-			Timestamp = {EpochSec div 1000000, EpochSec rem 1000000, 0},
+		{UTC, Rest} ->
+			Timestamp = {UTC div 1000000, UTC rem 1000000, 0},
 			{NewDate, NewTime} = calendar:now_to_local_time(Timestamp),
-			{{NewDate, NewTime, time_zone_seconds()}, Rest};
+			{{NewDate, NewTime, dtz:time_zone_seconds()}, Rest};
 		_ ->
 			{badarg, Bs}
 		end;
@@ -793,7 +814,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 		{{{NewYear, Month, Day}, Time, Tz}, Rest};
 	$y ->
 		% http://pubs.opengroup.org/onlinepubs/9699919799/
-		case to_int(sub(Bs, 0, 2), 10) of
+		case to_int(sub(Bs, 0, 2), 10, 2) of
 		{Value, _} when 0 =< Value andalso Value =< 99 ->
 			NewYear = if
 			Value =< 68 -> 2000 + Value;
@@ -873,14 +894,3 @@ casestr(Bs, Pattern, <<Ach:8, Next/binary>>, <<Bch:8, Pat/binary>>, Index) ->
 			casestr(Rest, Pattern, Rest, Pattern, Index + 1)
 	end.
 
-%%
-%% These will move to another module (eventually).
-%%
-time_to_epoch_seconds({Date = {Year, _Month, _Day}, {Hour, Min, Sec}}) ->
-	Yday = calendar:date_to_gregorian_days(Date) - calendar:date_to_gregorian_days(Year, 1, 1),
-	Sec + Min * 60 + Hour * 3600 + Yday * 86400 + (Year - 1970) * 31536000 + ((Year - 1969) div 4) * 86400.
-
-time_zone_seconds() ->
-	Local = erlang:localtime(),
-	Utc = erlang:localtime_to_universaltime(Local),
-	time_to_epoch_seconds(Local) - time_to_epoch_seconds(Utc).

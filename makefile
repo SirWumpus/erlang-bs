@@ -30,9 +30,9 @@ test: unit
 
 unit:
 	rebar3 eunit --cover
+	rebar3 cover
 
 cover: unit
-	rebar3 cover
 	lynx _build/test/cover/index.html
 
 _checkouts:
