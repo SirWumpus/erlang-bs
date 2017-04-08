@@ -550,6 +550,10 @@ to_date_time(Bs) ->
 			<<"%a %d %b %Y %H:%M:%S">>,
 			<<"%d %b %Y %H:%M:%S %z">>,
 			<<"%d %b %Y %H:%M:%S">>,
+			<<"%d %b %Y %H:%M %z">>,
+			<<"%d %b %Y %H:%M">>,
+			<<"%d %b %Y %H %M %z">>,
+			<<"%d %b %Y %H %M">>,
 			<<"%d %b %Y">>,
 
 			%% ctime() variants
