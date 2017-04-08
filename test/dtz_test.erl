@@ -1,10 +1,10 @@
 -module(dtz_test).
 -include_lib("eunit/include/eunit.hrl").
 
-time_to_epoch_seconds_test_() ->
+to_epoch_seconds_test_() ->
 	[
-	?_assertMatch(0, dtz:time_to_epoch_seconds({{1970,1,1}, {0,0,0}})),
-	?_assertMatch(1491090309, dtz:time_to_epoch_seconds({{2017,4,1}, {23,45,9}}))
+	?_assertMatch(0, dtz:to_epoch_seconds({{1970,1,1}, {0,0,0}})),
+	?_assertMatch(1491090309, dtz:to_epoch_seconds({{2017,4,1}, {23,45,9}}))
 	].
 
 to_utc_seconds_test_() ->
