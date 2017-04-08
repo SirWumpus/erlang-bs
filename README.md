@@ -160,7 +160,7 @@ Use binary string Fmt to format Date and Time into Bs.  All ordinary characters 
 
 **%r**	is replaced by the ~~locale's~~ representation of 12-hour clock time using AM/PM notation.
 
-**%s**	is replaced by the number of seconds since the Epoch.
+**%s**	is replaced by the number of UTC seconds since the Epoch.
 
 **%T**	is replaced by the time in the format ``%H:%M:%S''.
 
@@ -267,7 +267,7 @@ The format string consists of zero or more conversion specifications, whitespace
 
 **%S** the seconds [0,61]; leading zeros are permitted but not required.
 
-**%s** the number of seconds since the Epoch, UTC (see mktime(3)).
+**%s** the number of UTC seconds since the Epoch.
 
 **%t** any white-space, including none.
 
