@@ -79,7 +79,7 @@ If the character is alphabetic, return its corresponding upper case letter; othe
 
 - - -
 ### str:at(Bs, Index) -> byte() | badarg
-Return the character/byte at the given index in the binary string.
+Return the character/byte at the given index in the binary string.  Alias for `binary:at/2`.
 
 - - -
 ### str:cat(Bs1, Bs2) -> Bs
@@ -315,7 +315,7 @@ Return the binary substring from starting index until  end of string.  The index
 
 - - -
 ### str:sub(Bs, Start, Stop) -> Bs
-Return the binary substring between start and stop index, excluding stop.  The indices counts from zero (0).
+Return the binary substring between start and stop index, excluding stop.  The indices counts from zero (0).  Wrapper for `binary_part/3`.
 
 - - -
 ### str:to_date_time(Bs) -> {{Date, Time, Tz}, << Rest >>} | badarg

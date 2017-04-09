@@ -19,10 +19,17 @@ len(Bs) ->
 
 at(Bs, Index) when Index < 0 orelse byte_size(Bs) =< Index ->
 	badarg;
-at(<<Ch:8, _/binary>>, 0) ->
-	Ch;
-at(<<_:8, Rest/binary>>, Index) ->
-	at(Rest, Index-1).
+at(Bs, Index) ->
+	binary:at(Bs, Index).
+
+% Classic method
+%
+%at(Bs, Index) when Index < 0 orelse byte_size(Bs) =< Index ->
+%	badarg;
+%at(<<Ch:8, _/binary>>, 0) ->
+%	Ch;
+%at(<<_:8, Rest/binary>>, Index) ->
+%	at(Rest, Index-1).
 
 cat(<<Bs1/binary>>, <<Bs2/binary>>) ->
 	<<Bs1/binary, Bs2/binary>>;
@@ -105,19 +112,26 @@ cspn(<<Ch:8, Rest/binary>>, Delims, Span) ->
 	end.
 
 sub(Bs, Start) ->
-	sub(Bs, Start, len(Bs)).
+	sub(Bs, Start, byte_size(Bs)).
 sub(_Bs, Start, Stop) when Stop =< Start ->
 	<<>>;
 sub(Bs, Start, Stop) ->
-	sub(Bs, Start, Stop, <<>>).
-sub(_Bs, 0, 0, Acc) ->
-	Acc;
-sub(<<>>, _Start, _Stop, Acc) ->
-	Acc;
-sub(<<Ch:8, Rest/binary>>, 0, Stop, Acc) ->
-	sub(Rest, 0, Stop-1, <<Acc/binary, Ch>>);
-sub(<<_:8, Rest/binary>>, Start, Stop, Acc) ->
-	sub(Rest, Start-1, Stop-1, Acc).
+	binary_part(Bs, Start, Stop - Start).
+
+% Classic method
+%
+%sub(_Bs, Start, Stop) when Stop =< Start ->
+%	<<>>;
+%sub(Bs, Start, Stop) ->
+%	sub(Bs, Start, Stop, <<>>).
+%sub(_Bs, 0, 0, Acc) ->
+%	Acc;
+%sub(<<>>, _Start, _Stop, Acc) ->
+%	Acc;
+%sub(<<Ch:8, Rest/binary>>, 0, Stop, Acc) ->
+%	sub(Rest, 0, Stop-1, <<Acc/binary, Ch>>);
+%sub(<<_:8, Rest/binary>>, Start, Stop, Acc) ->
+%	sub(Rest, Start-1, Stop-1, Acc).
 
 tok(Bs, Delims) ->
 	% Skip leading delimiters.
