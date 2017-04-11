@@ -16,7 +16,7 @@ Data Types
 * Date = { Year, Month, Day }
 * Time = { Hour, Minute, Second }
 * Tz = integer() ; time zone offset in seconds, eg. -18000 = -05:00 = EST, -12600 = -03:30 = Newfoundland
-
+* Pattern = <<"...">> ; sub-string to find
 
 Exports
 -------
@@ -341,6 +341,23 @@ Remove leading and trailing whitespace from a binary string.
 - - -
 ### str:upper(Bs) -> Bs
 Return a binary string converted to upper case.
+
+- - -
+### sunday:init(Pattern, MaxErr) -> {Pattern, MaxErr, DeltaMap} | badarg
+Generate the delta shift table used for the Boyer-Moore-Sunday approximate string matching for MaxErr mismatches.  The return tuple can be passed to `sunday:search/2`.
+
+- - -
+### sunday:search(Bs, Pattern) -> Index | -1 | badarg
+Equivalent to `sunday:search(Bs, sunday:init(Pattern, 0))`.
+
+- - -
+### sunday:search(Bs, Pattern, MaxErr) -> Index | -1 | badarg
+Equivalent to `sunday:search(Bs, sunday:init(Pattern, MaxErr))`.
+
+- - -
+### sunday:search(Bs, {Pattern, MaxErr, DeltaMap}) -> Index | -1
+
+Generalised Boyer-Moore-Sunday approximate string matching for MaxErr mismatches.  For MaxErr=0, the program performs exact string searching.  Return the index of the first occurence of Pattern in Bs; otherwise -1 if not found.
 
 
 Copyright
