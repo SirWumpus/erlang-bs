@@ -11,6 +11,7 @@ time_zone_seconds() ->
 	to_epoch_seconds(Local) - to_epoch_seconds(Utc).
 
 to_utc_seconds({Date, Time}) ->
+	% Assume local time zone.
 	to_utc_seconds({Date, Time, time_zone_seconds()});
 to_utc_seconds({Date, Time, Tz}) ->
 	if
