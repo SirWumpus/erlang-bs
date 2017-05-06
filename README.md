@@ -78,6 +78,14 @@ If the character is alphabetic, return its corresponding lower case letter; othe
 If the character is alphabetic, return its corresponding upper case letter; otherwise the character as-is.
 
 - - -
+### fnv:hash32(Bs) -> integer()
+Return a Fowler-Noll-Vo 1a 32-bit hash for the given binary string. 
+
+- - -
+### fnv:hash56(Bs) -> integer()
+Return a Fowler-Noll-Vo 1a 56-bit hash for the given binary string. 
+
+- - -
 ### str:at(Bs, Index) -> byte() | badarg
 Return the character/byte at the given index in the binary string.  Alias for `binary:at/2`.
 
