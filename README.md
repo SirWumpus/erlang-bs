@@ -367,6 +367,30 @@ Equivalent to `sunday:search(Bs, sunday:init(Pattern, MaxErr))`.
 
 Generalised Boyer-Moore-Sunday approximate string matching for MaxErr mismatches.  For MaxErr=0, the program performs exact string searching.  Return the index of the first occurence of Pattern in Bs; otherwise -1 if not found.
 
+References
+----------
+
+Fowler, Noll, Vo; 1994  
+<http://www.isthe.com/chongo/tech/comp/fnv/index.html>
+
+Fowler, Noll, Vo on Wikipedia  
+<https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function>
+
+Which hashing algorithm is best for uniqueness and speed?  
+<http://programmers.stackexchange.com/questions/49550/which-hashing-algorithm-is-best-for-uniqueness-and-speed>
+
+"A very fast substring search algorithm";  
+Daniel M. Sunday; Communications ofthe ACM; August 1990;  
+<https://csclub.uwaterloo.ca/~pbarfuss/p132-sunday.pdf>
+
+"Approximate Boyer-Moore String Matching";  
+Jorma Tarhio And Esko Ukkonen; 1990;  
+<https://www.cs.hut.fi/u/tarhio/papers/abm.pdf>
+
+"Approximate Boyer-Moore String Matching" Explained;  
+Presention by Kuei-hao Chen;  
+<http://t2.ecp168.net/webs@73/cyberhood/Approximate_String_Matching/BHM_approximate_string_Algorithm.ppt>
+
 
 Copyright
 ---------
