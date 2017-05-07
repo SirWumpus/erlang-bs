@@ -5,6 +5,9 @@
 -module(fnv).
 -export([hash32/1, hash56/1]).
 
+-define(FNV32_SHIFT, true).
+-define(FNV56_SHIFT, true).
+
 %
 % FNV1a
 %
@@ -31,7 +34,7 @@ hash32(<<>>, Acc) ->
 hash32(<<Octet:8, Rest/binary>>, Acc) ->
 	H = Acc bxor Octet,
 	H1 = H + ((H bsl 1) + (H bsl 4) + (H bsl 7) + (H bsl 8) + (H bsl 24)),
-	hash32f(Rest, H1 band ?FNV32_MASK).
+	hash32(Rest, H1 band ?FNV32_MASK).
 
 -else.
 
@@ -114,7 +117,7 @@ hash56(<<>>, Acc) ->
 hash56(<<Octet:8, Rest/binary>>, Acc) ->
 	H = Acc bxor Octet,
 	H1 = H + ((H bsl 2) + (H bsl 3) + (H bsl 5) + (H bsl 8) + (H bsl 32)),
-	hash56f(Rest, H1 band ?FNV56_MASK).
+	hash56(Rest, H1 band ?FNV56_MASK).
 
 -else.
 
