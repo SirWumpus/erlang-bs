@@ -188,6 +188,10 @@ Use binary string Fmt to format Date and Time into Bs.  All ordinary characters 
 
 
 - - -
+### str:isprintable(Bs) -> boolean()
+True if the binary string consists only of printable characters, ie. every character is one of  `ctype:isprint/1`, `ctype:isspace/1`, or ASCII control characters `BEL`, `BS`, or `ESC`.
+
+- - -
 ### str:len(Bs) -> Length
 Length of binary string.  Alias for `byte_size/1`.
 

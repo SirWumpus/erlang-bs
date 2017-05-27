@@ -548,3 +548,15 @@ casestr_test_() ->
         ?_assertMatch(5, str:casestr(<<"Joey Bloggs">>, <<"BLOG">>))
 	].
 
+isprintable_test_() ->
+	[
+        ?_assertMatch(false, str:isprintable([])),
+        ?_assertMatch(false, str:isprintable("")),
+        ?_assertMatch(false, str:isprintable(123)),
+        ?_assertMatch(false, str:isprintable({a, b})),
+        ?_assertMatch(true, str:isprintable(<<>>)),
+        ?_assertMatch(true, str:isprintable(<<"abc 123 !@#">>)),
+        ?_assertMatch(true, str:isprintable(<<"beep\b tab\t esc\e">>)),
+        ?_assertMatch(false, str:isprintable(<<"abc", 1, 2, 3, "bar">>))
+	].
+

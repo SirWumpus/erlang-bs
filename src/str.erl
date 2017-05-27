@@ -5,7 +5,7 @@
 	error/1, len/1, rev/1, ltrim/1, rtrim/1, trim/1, spn/2, cspn/2, sub/2,
 	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
 	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2, to_int/3,
-	ptime/2, to_date_time/1, str/2, casestr/2
+	ptime/2, to_date_time/1, str/2, casestr/2, isprintable/1
 ]).
 
 -ifdef(EUNIT).
@@ -13,6 +13,17 @@
 	iso_date_time/1, index_of_word/2
 ]).
 -endif.
+
+-define(BEL, 7).
+-define(BS,  8).
+-define(TAB, 9).
+-define(LF,  10).
+-define(VT,  11).
+-define(FF,  12).
+-define(CR,  13).
+-define(ESC, 27).
+-define(SPC, 32).
+-define(DEL, 127).
 
 len(Bs) ->
 	byte_size(Bs).
@@ -912,3 +923,14 @@ casestr(Bs, Pattern, <<Ach:8, Next/binary>>, <<Bch:8, Pat/binary>>, Index) ->
 			casestr(Rest, Pattern, Rest, Pattern, Index + 1)
 	end.
 
+isprintable(<<>>) ->
+	true;
+isprintable(<<Ch:8, Rest/binary>>) ->
+	case ctype:isprint(Ch) orelse ctype:isspace(Ch) orelse Ch == ?BEL orelse Ch == ?BS orelse Ch == ?ESC of
+	true ->
+		isprintable(Rest);
+	false ->
+		false
+	end;
+isprintable(_Other) ->
+	false.
