@@ -368,6 +368,7 @@ ftime_test_() ->
 	?_assertMatch(<<"Ottawa -0500">>, str:ftime(<<"Ottawa %z">>, {{2017,4,1},{17,37,46}, -18000})),
 	?_assertMatch(<<"St. Johns, NL -0330">>, str:ftime(<<"St. Johns, NL %z">>, {{2017,4,1},{17,37,46}, -12600})),
 	?_assertMatch(<<"\t%\n">>, str:ftime(<<"%t%%%n">>, {{2017,4,1},{17,37,46}})),
+	?_assertMatch(<<"20170527T175300Z">>, str:ftime(<<"%Y%m%dT%H%M%SZ">>, 1495907580)),
 	?_assertThrow({error, not_supported}, str:ftime(<<"%G">>, {{2017,4,1},{17,37,46}})),
 	?_assertThrow({error, not_supported}, str:ftime(<<"%g">>, {{2017,4,1},{17,37,46}})),
 	?_assertThrow({error, not_supported}, str:ftime(<<"%U">>, {{2017,4,1},{17,37,46}})),

@@ -31,3 +31,10 @@ to_local_test_() ->
 	?_assertMatch({{1969,12,31}, {23,30,0}, -12600}, dtz:to_local({{1970,1,1}, {3,30,0}, +1800})),
 	?_assertMatch({{{1970,1,1}, {0,0,0}, -12600}, <<"What?">>}, dtz:to_local({{{1970,1,1}, {3,30,0}, 0}, <<"What?">>}))
 	].
+
+from_epoch_seconds_test_() ->
+	[
+	?_assertMatch({{1970,1,1}, {0,0,0}, 0}, dtz:from_epoch_seconds(0)),
+	?_assertMatch({{2017,5,27}, {17,53,0}, 0}, dtz:from_epoch_seconds(1495907580)),
+	?_assertMatch({{2017,4,1}, {23,45,9}, 0}, dtz:from_epoch_seconds(dtz:to_epoch_seconds({{2017,4,1}, {23,45,9}})))
+	].

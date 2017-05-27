@@ -17,6 +17,7 @@ Data Types
 * Time = { Hour, Minute, Second }
 * Tz = integer() ; time zone offset in seconds, eg. -18000 = -05:00 = EST, -12600 = -03:30 = Newfoundland
 * Pattern = <<"...">> ; sub-string to find
+* EpochSeconds = seconds since 1970-01-01T00:00:00Z.
 
 Exports
 -------
@@ -124,6 +125,7 @@ Return binary string error message for Reason.
 - - -
 ### str:ftime(Fmt, {Date, Time}) -> Bs
 ### str:ftime(Fmt, {Date, Time, Tz}) -> Bs
+### str:ftime(Fmt, EpochSeconds) -> Bs
 Use binary string Fmt to format Date and Time into Bs.  All ordinary characters are copied as-is, while the following format characters are replaced (similar to strftime(3)).  Without Tz, assumes local time of user $TZ or system when $TZ is unset.  To ensure UTC, use ftime/2 with Tz = 0.
 
 **%A**	is replaced by the ~~locale's~~ English full weekday name.

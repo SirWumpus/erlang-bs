@@ -360,7 +360,9 @@ tr(<<Ch:8, Rest/binary>>, FromSet, ToSet, Acc) ->
 ftime(Fmt, {Date, Time}) ->
 	ftime(Fmt, {Date, Time, dtz:time_zone_seconds()});
 ftime(Fmt, {Date, Time, Tz}) ->
-	ftime(Fmt, {Date, Time, Tz}, <<>>).
+	ftime(Fmt, {Date, Time, Tz}, <<>>);
+ftime(Fmt, EpochSeconds) ->
+	ftime(Fmt, dtz:from_epoch_seconds(EpochSeconds)).
 ftime(<<>>, _DateTime, Acc) ->
 	Acc;
 ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time, Tz}, Acc) ->
@@ -604,6 +606,7 @@ to_date_time(Bs) ->
 	DateTimeTz_Rest ->
 		DateTimeTz_Rest
 	end.
+
 to_date_time(_Bs, []) ->
 	badarg;
 to_date_time(Bs, [Fmt | Tail]) ->

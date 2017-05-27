@@ -1,5 +1,8 @@
 -module(dtz).
--export([to_epoch_seconds/1, time_zone_seconds/0, to_utc_seconds/1, to_utc/1, to_local/1]).
+-export([
+	to_epoch_seconds/1, time_zone_seconds/0, to_utc_seconds/1,
+	to_utc/1, to_local/1, from_epoch_seconds/1
+]).
 
 to_epoch_seconds({Date = {Year, _Month, _Day}, {Hour, Min, Sec}}) ->
 	Yday = calendar:date_to_gregorian_days(Date) - calendar:date_to_gregorian_days(Year, 1, 1),
@@ -36,3 +39,8 @@ to_local(DTZ) ->
 	Timestamp = {UTC div 1000000, UTC rem 1000000, 0},
 	{Date, Time} = calendar:now_to_local_time(Timestamp),
 	{Date, Time, time_zone_seconds()}.
+
+from_epoch_seconds(EpochSeconds) ->
+	Timestamp = {EpochSeconds div 1000000, EpochSeconds rem 1000000, 0},
+	{Date, Time} = calendar:now_to_universal_time(Timestamp),
+	{Date, Time, 0}.
