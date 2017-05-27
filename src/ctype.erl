@@ -9,14 +9,25 @@
 %% These functions assume ASCII.
 %%
 
+-define(BEL, 7).
+-define(BS,  8).
+-define(TAB, 9).
+-define(LF,  10).
+-define(VT,  11).
+-define(FF,  12).
+-define(CR,  13).
+-define(ESC, 27).
+-define(SPC, 32).
+-define(DEL, 127).
+
 isblank(Ch) ->
-	Ch =:= 32 orelse Ch =:= 9.
+	Ch =:= 32 orelse Ch =:= ?TAB.
 
 isspace(Ch) ->
-	Ch =:= 32 orelse (9 =< Ch andalso Ch =< 13).
+	Ch =:= 32 orelse (?TAB =< Ch andalso Ch =< ?CR).
 
 isprint(Ch) ->
-	32 =< Ch andalso Ch < 127.
+	?SPC =< Ch andalso Ch < ?DEL.
 
 isdigit(Ch) ->
 	$0 =< Ch andalso Ch =< $9.
@@ -25,7 +36,7 @@ isxdigit(Ch) ->
 	isdigit(Ch) orelse ($A =< Ch andalso Ch =< $F) orelse ($a =< Ch andalso Ch =< $f).
 
 iscntrl(Ch) ->
-	(0 =< Ch andalso Ch < 32) orelse Ch =:= 127.
+	(0 =< Ch andalso Ch < ?SPC) orelse Ch =:= ?DEL.
 
 isupper(Ch) ->
 	$A =< Ch andalso Ch =< $Z.
@@ -40,7 +51,7 @@ isalnum(Ch) ->
 	isalpha(Ch) orelse isdigit(Ch).
 
 ispunct(Ch) ->
-	32 < Ch andalso Ch < 127 andalso not isalnum(Ch).
+	?SPC < Ch andalso Ch < ?DEL andalso not isalnum(Ch).
 
 tolower(Ch) ->
 	case isupper(Ch) of
