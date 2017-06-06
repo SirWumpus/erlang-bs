@@ -5,7 +5,8 @@
 	error/1, len/1, rev/1, ltrim/1, rtrim/1, trim/1, spn/2, cspn/2, sub/2,
 	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
 	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2, to_int/3,
-	ptime/2, to_date_time/1, str/2, casestr/2, isprintable/1
+	ptime/2, to_date_time/1, str/2, casestr/2, isprintable/1,
+	token/1, token/2, token/3
 ]).
 
 -ifdef(EUNIT).
@@ -937,3 +938,53 @@ isprintable(<<Ch:8, Rest/binary>>) ->
 	end;
 isprintable(_Other) ->
 	false.
+
+-define(DQUOTE, 16#22).
+-define(SQUOTE, 16#27).
+-define(BACKSLASH, 16#5C).
+
+token(Bs) ->
+	token(Bs, <<" \t\r\n\f">>, false).
+token(Bs, Delims) ->
+	token(Bs, Delims, false).
+token(Bs, Delims, KeepQuotes) ->
+	token(Bs, Delims, KeepQuotes, <<>>).
+token(<<>>, _Delims, _KeepQuotes, Acc) ->
+	{Acc, <<>>};
+token(Bs, Delims, KeepQuotes, Acc) ->
+	case {Bs, KeepQuotes} of
+	{<<?BACKSLASH, Ch:8, Rest/binary>>, false} ->
+		token(Rest, Delims, KeepQuotes, <<Acc/binary, Ch:8>>);
+	{<<?BACKSLASH, Ch:8, Rest/binary>>, true} ->
+		token(Rest, Delims, KeepQuotes, <<Acc/binary, ?BACKSLASH, Ch:8>>);
+	{<<?DQUOTE, Rest/binary>>, false} ->
+		token(Rest, Delims, KeepQuotes, ?DQUOTE, Acc);
+	{<<?DQUOTE, Rest/binary>>, true} ->
+		token(Rest, Delims, KeepQuotes, ?DQUOTE, <<Acc/binary, ?DQUOTE>>);
+	{<<?SQUOTE, Rest/binary>>, false} ->
+		token(Rest, Delims, KeepQuotes, ?SQUOTE, Acc);
+	{<<?SQUOTE, Rest/binary>>, true} ->
+		token(Rest, Delims, KeepQuotes, ?SQUOTE, <<Acc/binary, ?SQUOTE>>);
+	{<<Octet:8, Rest/binary>>, _} ->
+		case str:chr(Delims, Octet) of
+		-1 ->
+			token(Rest, Delims, KeepQuotes, <<Acc/binary, Octet:8>>);
+		_ ->
+			{Acc, Rest}
+		end
+	end.
+token(<<>>, _Delims, _KeepQuotes, Quote, Acc) ->
+	throw({error, unbalanced_quotes, Quote, Acc});
+token(Bs, Delims, KeepQuotes, Quote, Acc) ->
+	case {Bs, KeepQuotes} of
+	{<<?BACKSLASH, Ch:8, Rest/binary>>, false} ->
+		token(Rest, Delims, KeepQuotes, Quote, <<Acc/binary, Ch:8>>);
+	{<<?BACKSLASH, Ch:8, Rest/binary>>, true} ->
+		token(Rest, Delims, KeepQuotes, Quote, <<Acc/binary, ?BACKSLASH, Ch:8>>);
+	{<<Quote:8, Rest/binary>>, false} ->
+		token(Rest, Delims, KeepQuotes, Acc);
+	{<<Quote:8, Rest/binary>>, true} ->
+		token(Rest, Delims, KeepQuotes, <<Acc/binary, Quote:8>>);
+	{<<Octet:8, Rest/binary>>, _} ->
+		token(Rest, Delims, KeepQuotes, Quote, <<Acc/binary, Octet:8>>)
+	end.

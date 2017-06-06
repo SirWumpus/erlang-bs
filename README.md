@@ -344,6 +344,12 @@ Return a tulpe of the leading parsed integer and remaining binary string.  The p
 Return a tuple of the first token separated by one or more delimiters and the remaining binary string.
 
 - - -
+### str:token(Bs) -> {<< Token >>, << Rest >>}
+### str:token(Bs, Delims) -> {<< Token >>, << Rest >>}
+### str:token(Bs, Delims, KeepQuotes) -> {<< Token >>, << Rest >>}
+Token parser that understands single and double quoted strings and/or backslash escaped characters within the token.  Return a tuple of the first token separated by one or more delimiters and the remaining binary string.  If `KeepQuotes` is true, retain quotes and/or backslashes in the token.  Default `Delims` are whitespace characters.  Default `KeepQuotes` is false.
+
+- - -
 ### str:tr(Bs, FromSet) -> Bs
 ### str:tr(Bs, FromSet, ToSet) -> Bs
 For each character in Bs found at position N of FromSet (a binary string) is replaced by a character at position N of ToSet (a binary string); if ToSet is shorter than FromSet, then the last character of ToSet is used.  If ToSet is missing or empty, then characters in FromSet are deleted from Bs.
