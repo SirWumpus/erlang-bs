@@ -561,21 +561,21 @@ isprintable_test_() ->
         ?_assertMatch(false, str:isprintable(<<"abc", 1, 2, 3, "bar">>))
 	].
 
-token_strip_test_() ->
+token_test_() ->
 	[
 	% Empty string.
 	?_assertMatch({<<>>, <<>>}, str:token(<<"">>)),
 
 	% Default whitespace delimiters.
 	?_assertMatch({<<"ABC">>, <<"123">>}, str:token(<<"ABC 123">>)),
-	?_assertMatch({<<"ABC">>, <<"\t123">>}, str:token(<<"ABC\t\t123">>)),
+	?_assertMatch({<<"ABC">>, <<"123">>}, str:token(<<"ABC\t\t123">>)),
 	?_assertMatch({<<>>, <<"123">>}, str:token(<<"\t123">>)),
 
 	% Supplied delimiters.
-	?_assertMatch({<<"ABC">>, <<" 123">>}, str:token(<<"ABC, 123">>, <<";,.">>)),
+	?_assertMatch({<<"ABC">>, <<"123">>}, str:token(<<"ABC, 123">>, <<";,.">>)),
 	?_assertMatch({<<" 123">>, <<>>}, str:token(<<" 123">>, <<";,.">>)),
-	?_assertMatch({<<"ABC">>, <<" 123.foo">>}, str:token(<<"ABC, 123.foo">>, <<";,.">>)),
-	?_assertMatch({<<"">>, <<" 123.foo">>}, str:token(<<", 123.foo">>, <<";,.">>)),
+	?_assertMatch({<<"ABC">>, <<"123.foo">>}, str:token(<<"ABC, 123.foo">>, <<";,.">>)),
+	?_assertMatch({<<"">>, <<"123.foo">>}, str:token(<<", 123.foo">>, <<";,.">>)),
 
 	% Single quoted string
 	?_assertMatch({<<>>, <<>>}, str:token(<<"''">>)),
@@ -596,15 +596,3 @@ token_strip_test_() ->
 	?_assertMatch({<<"ABC\"123">>, <<>>}, str:token(<<"ABC\\\"123">>))
 	].
 
-token_keep_test_() ->
-	[
-	% Empty string.
-	?_assertMatch({<<>>, <<>>}, str:token(<<"">>, <<" \t\r\n\f">>, true)),
-
-	% Single quoted string
-	?_assertMatch({<<"''">>, <<>>}, str:token(<<"''">>, <<" \t\r\n\f">>, true)),
-	?_assertMatch({<<"'ABC'">>, <<>>}, str:token(<<"'ABC'">>, <<" \t\r\n\f">>, true)),
-	?_assertMatch({<<"''">>, <<"123">>}, str:token(<<"'' 123">>, <<" \t\r\n\f">>, true)),
-	?_assertMatch({<<"'\\\''">>, <<>>}, str:token(<<"'\\\''">>, <<" \t\r\n\f">>, true)),
-	?_assertMatch({<<"ABC' \\\' '123">>, <<>>}, str:token(<<"ABC' \\\' '123">>, <<" \t\r\n\f">>, true))
-	].

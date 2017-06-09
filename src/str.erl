@@ -6,7 +6,7 @@
 	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
 	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2, to_int/3,
 	ptime/2, to_date_time/1, str/2, casestr/2, isprintable/1,
-	token/1, token/2, token/3
+	token/1, token/2
 ]).
 
 -ifdef(EUNIT).
@@ -25,6 +25,8 @@
 -define(ESC, 27).
 -define(SPC, 32).
 -define(DEL, 127).
+-define(LINESPACE, <<" \t">>).
+-define(WHITESPACE, <<" \t\n\r\f\v">>).
 
 len(Bs) ->
 	byte_size(Bs).
@@ -686,7 +688,7 @@ ptime(Bs, Fmt) ->
 ptime(Bs, <<>>, DateTimeTz) ->
 	{DateTimeTz, Bs};
 ptime(Bs, <<" ", Fmt/binary>>, DateTimeTz) ->
-	Span = spn(Bs, <<" \t\n\r\v\f">>),
+	Span = spn(Bs, ?WHITESPACE),
 	case ptime(sub(Bs, Span), Fmt, DateTimeTz) of
 	{badarg, _} ->
 		{badarg, Bs};
@@ -707,7 +709,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 	$A ->
 		ptime(Bs, <<"%a">>);
 	$b ->
-		Span = cspn(Bs, <<" \t\n\r\v\f">>),
+		Span = cspn(Bs, ?WHITESPACE),
 		Token = sub(Bs, 0, Span),
 		case index_of_word(Token, [?MONTH_SHORT, ?MONTH_FULL]) of
 		notfound ->
@@ -786,10 +788,10 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			{badarg, Bs}
 		end;
 	$n ->
-		Span = spn(Bs, <<" \t\r\n\f\v">>),
+		Span = spn(Bs, ?WHITESPACE),
 		{{Date, Time, Tz}, sub(Bs, Span)};
 	$p ->
-		Span = cspn(Bs, <<" \t">>),
+		Span = cspn(Bs, ?LINESPACE),
 		Rest = sub(Bs, Span),
 		case index_of_word(sub(Bs, 0, Span), [<<"am">>, <<"pm">>]) of
 		0 ->
@@ -822,7 +824,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			{badarg, Bs}
 		end;
 	$t ->
-		Span = spn(Bs, <<" \t\r\n\f\v">>),
+		Span = spn(Bs, ?WHITESPACE),
 		{{Date, Time, Tz}, sub(Bs, Span)};
 	$T ->
 		ptime(Bs, <<"%H:%M:%S">>);
@@ -944,47 +946,38 @@ isprintable(_Other) ->
 -define(BACKSLASH, 16#5C).
 
 token(Bs) ->
-	token(Bs, <<" \t\r\n\f">>, false).
+	token(Bs, ?WHITESPACE).
 token(Bs, Delims) ->
-	token(Bs, Delims, false).
-token(Bs, Delims, KeepQuotes) ->
-	token(Bs, Delims, KeepQuotes, <<>>).
-token(<<>>, _Delims, _KeepQuotes, Acc) ->
+	token(Bs, Delims, <<>>).
+token(<<>>, _Delims, Acc) ->
 	{Acc, <<>>};
-token(Bs, Delims, KeepQuotes, Acc) ->
-	case {Bs, KeepQuotes} of
-	{<<?BACKSLASH, Ch:8, Rest/binary>>, false} ->
-		token(Rest, Delims, KeepQuotes, <<Acc/binary, Ch:8>>);
-	{<<?BACKSLASH, Ch:8, Rest/binary>>, true} ->
-		token(Rest, Delims, KeepQuotes, <<Acc/binary, ?BACKSLASH, Ch:8>>);
-	{<<?DQUOTE, Rest/binary>>, false} ->
-		token(Rest, Delims, KeepQuotes, ?DQUOTE, Acc);
-	{<<?DQUOTE, Rest/binary>>, true} ->
-		token(Rest, Delims, KeepQuotes, ?DQUOTE, <<Acc/binary, ?DQUOTE>>);
-	{<<?SQUOTE, Rest/binary>>, false} ->
-		token(Rest, Delims, KeepQuotes, ?SQUOTE, Acc);
-	{<<?SQUOTE, Rest/binary>>, true} ->
-		token(Rest, Delims, KeepQuotes, ?SQUOTE, <<Acc/binary, ?SQUOTE>>);
-	{<<Octet:8, Rest/binary>>, _} ->
+token(Bs, Delims, Acc) ->
+	case Bs of
+	<<?BACKSLASH, Ch:8, Rest/binary>> ->
+		token(Rest, Delims, <<Acc/binary, Ch:8>>);
+	<<?DQUOTE, Rest/binary>> ->
+		token(Rest, Delims, ?DQUOTE, Acc);
+	<<?SQUOTE, Rest/binary>> ->
+		token(Rest, Delims, ?SQUOTE, Acc);
+	<<Octet:8, Rest/binary>> ->
 		case str:chr(Delims, Octet) of
 		-1 ->
-			token(Rest, Delims, KeepQuotes, <<Acc/binary, Octet:8>>);
+			token(Rest, Delims, <<Acc/binary, Octet:8>>);
 		_ ->
-			{Acc, Rest}
+			Span = spn(Rest, ?WHITESPACE),
+			<<_:Span/bytes, Rest2/binary>> = Rest,
+			{Acc, Rest2}
 		end
 	end.
-token(<<>>, _Delims, _KeepQuotes, Quote, Acc) ->
+token(<<>>, _Delims, Quote, Acc) ->
 	throw({error, unbalanced_quotes, Quote, Acc});
-token(Bs, Delims, KeepQuotes, Quote, Acc) ->
-	case {Bs, KeepQuotes} of
-	{<<?BACKSLASH, Ch:8, Rest/binary>>, false} ->
-		token(Rest, Delims, KeepQuotes, Quote, <<Acc/binary, Ch:8>>);
-	{<<?BACKSLASH, Ch:8, Rest/binary>>, true} ->
-		token(Rest, Delims, KeepQuotes, Quote, <<Acc/binary, ?BACKSLASH, Ch:8>>);
-	{<<Quote:8, Rest/binary>>, false} ->
-		token(Rest, Delims, KeepQuotes, Acc);
-	{<<Quote:8, Rest/binary>>, true} ->
-		token(Rest, Delims, KeepQuotes, <<Acc/binary, Quote:8>>);
-	{<<Octet:8, Rest/binary>>, _} ->
-		token(Rest, Delims, KeepQuotes, Quote, <<Acc/binary, Octet:8>>)
+token(Bs, Delims, Quote, Acc) ->
+	case Bs of
+	<<?BACKSLASH, Ch:8, Rest/binary>> ->
+		token(Rest, Delims, Quote, <<Acc/binary, Ch:8>>);
+	<<Quote:8, Rest/binary>> ->
+		token(Rest, Delims, Acc);
+	<<Octet:8, Rest/binary>> ->
+		token(Rest, Delims, Quote, <<Acc/binary, Octet:8>>)
 	end.
+

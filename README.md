@@ -346,8 +346,7 @@ Return a tuple of the first token separated by one or more delimiters and the re
 - - -
 ### str:token(Bs) -> {<< Token >>, << Rest >>}
 ### str:token(Bs, Delims) -> {<< Token >>, << Rest >>}
-### str:token(Bs, Delims, KeepQuotes) -> {<< Token >>, << Rest >>}
-Token parser that understands single and double quoted strings and/or backslash escaped characters within the token.  Return a tuple of the first token separated by one or more delimiters and the remaining binary string.  If `KeepQuotes` is true, retain quotes and/or backslashes in the token.  Default `Delims` are whitespace characters.  Default `KeepQuotes` is false.
+Token parser that understands single and double quoted strings and/or backslash escaped characters within the token.  Return a tuple of the first token separated by a delimiter followed by any whitespace, and the remaining binary string.  Default `Delims` are whitespace characters.
 
 - - -
 ### str:tr(Bs, FromSet) -> Bs
