@@ -6,7 +6,7 @@
 	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
 	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2, to_int/3,
 	ptime/2, to_date_time/1, str/2, casestr/2, isprintable/1,
-	token/1, token/2
+	token/1, token/2, split/1, split/2
 ]).
 
 -ifdef(EUNIT).
@@ -980,4 +980,14 @@ token(Bs, Delims, Quote, Acc) ->
 	<<Octet:8, Rest/binary>> ->
 		token(Rest, Delims, Quote, <<Acc/binary, Octet:8>>)
 	end.
+
+split(Bs) ->
+	split(Bs, ?WHITESPACE).
+split(Bs, Delims) ->
+	split(Bs, Delims, []).
+split(<<>>, _Delims, Acc) ->
+	lists:reverse(Acc);
+split(Bs, Delims, Acc) ->
+	{Value, Rest} = token(Bs, Delims),
+	split(Rest, Delims, [Value | Acc]).
 

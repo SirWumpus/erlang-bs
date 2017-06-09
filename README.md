@@ -316,6 +316,11 @@ Reverse the binary string.
 Remove trailing whitespace from a binary string.
 
 - - -
+### str:split(Bs) -> List
+### str:split(Bs, Delims) -> List
+Return a list of binary strings split by `Delims` from `Bs`.
+
+- - -
 ### str:spn(Bs, Delims) -> Length
 Return the number of leading delimiters in the binary string.
 

@@ -596,3 +596,9 @@ token_test_() ->
 	?_assertMatch({<<"ABC\"123">>, <<>>}, str:token(<<"ABC\\\"123">>))
 	].
 
+split_test_() ->
+	[
+	?_assertMatch([], str:split(<<"">>)),
+	?_assertMatch([<<"ABC">>, <<"123">>, <<"XYZ">>], str:split(<<"ABC  123  XYZ">>)),
+	?_assertMatch([<<"ABC">>, <<"123">>, <<"XYZ">>], str:split(<<"ABC,  123;  XYZ">>, <<",;">>))
+	].
