@@ -318,7 +318,7 @@ Remove trailing whitespace from a binary string.
 - - -
 ### str:split(Bs) -> List
 ### str:split(Bs, Delims) -> List
-Return a list of binary strings split by `Delims` from `Bs`.
+Return a list of binary strings split by `Delims` from `Bs`.  Default `Delims` are whitespace characters.
 
 - - -
 ### str:spn(Bs, Delims) -> Length
@@ -351,7 +351,7 @@ Return a tuple of the first token separated by one or more delimiters and the re
 - - -
 ### str:token(Bs) -> {<< Token >>, << Rest >>}
 ### str:token(Bs, Delims) -> {<< Token >>, << Rest >>}
-Token parser that understands single and double quoted strings and/or backslash escaped characters within the token.  Return a tuple of the first token separated by a delimiter followed by any whitespace, and the remaining binary string.  Default `Delims` are whitespace characters.
+Token parser that understands single and double quoted strings and/or backslash escaped characters within the token.  Return a tuple of the first token separated by an unquoted delimiter followed by any whitespace, and the remaining binary string.  Default `Delims` are whitespace characters.
 
 - - -
 ### str:tr(Bs, FromSet) -> Bs
