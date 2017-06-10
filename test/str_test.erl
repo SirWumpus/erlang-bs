@@ -397,6 +397,8 @@ to_int_test_() ->
 	?_assertMatch(badarg, str:to_int(<<"123">>, -1)),
 	?_assertMatch(badarg, str:to_int(<<"123">>, 37)),
 	?_assertMatch(badarg, str:to_int(<<"no digits">>, 10)),
+	?_assertMatch(badarg, str:to_int([], 0)),
+	?_assertMatch(badarg, str:to_int(atom, 0)),
 	?_assertMatch({2, <<>>}, str:to_int(<<"10">>, 2)),
 	?_assertMatch({9, <<>>}, str:to_int(<<"1001">>, 2)),
 	?_assertMatch({999, <<>>}, str:to_int(<<"  00999">>, 10)),

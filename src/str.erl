@@ -527,8 +527,10 @@ pad_sign_int(Int, Pad, Width) ->
 	Num = integer_to_binary(Int),
 	lpad(<<$+, Num/binary>>, Pad, Width).
 
-to_int(Bs, Base) ->
-	to_int(Bs, Base, -1).
+to_int(Bs, Base) when is_binary(Bs) ->
+	to_int(Bs, Base, -1);
+to_int(_Other, _Base) ->
+	badarg.
 
 to_int(<<"0x", Rest/binary>>, Base, MaxDigits) when Base == 0 orelse Base == 16 ->
 	to_int(Rest, 16, MaxDigits, 0, 1, 0);
