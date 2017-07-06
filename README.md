@@ -198,16 +198,16 @@ True if the binary string consists only of printable characters, ie. every chara
 Length of binary string.  Alias for `byte_size/1`.
 
 - - -
+### str:lower(Bs) -> Bs
+Return a binary string converted to lower case.
+
+- - -
 ### str:lpad(Bs, Pad, Width) -> Bs
 Return Bs padded with Pad characters to the left until at least Width.
 
 - - -
 ### str:ltrim(Bs) -> Bs
 Remove leading whitespace from a binary string.
-
-- - -
-### str:lower(Bs) -> Bs
-Return a binary string converted to lower case.
 
 - - -
 ### str:ncasecmp(Bs1, Bs2, Length) -> integer() 
