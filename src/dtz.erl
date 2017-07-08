@@ -17,12 +17,7 @@ to_utc_seconds({Date, Time}) ->
 	% Assume local time zone.
 	to_utc_seconds({Date, Time, time_zone_seconds()});
 to_utc_seconds({Date, Time, Tz}) ->
-	if
-	Tz == 0 ->
-		to_epoch_seconds({Date, Time});
-	Tz /= 0 ->
-		to_epoch_seconds({Date, Time}) - Tz
-	end.
+	to_epoch_seconds({Date, Time}) - Tz.
 
 to_utc({DTZ, Rest}) ->
 	{to_utc(DTZ), Rest};
