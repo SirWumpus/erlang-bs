@@ -955,17 +955,28 @@ token(<<>>, _Delims, Acc) ->
 	{Acc, <<>>};
 token(Bs, Delims, Acc) ->
 	case Bs of
-	<<?BACKSLASH, Ch:8, Rest/binary>> ->
-		token(Rest, Delims, <<Acc/binary, Ch:8>>);
+	% Trailing backslash at end of string is ignored.
+	<<?BACKSLASH>> ->
+		token(<<>>, Delims, Acc);
+	% Backslash escape next character.
+	<<?BACKSLASH, Octet:8, Rest/binary>> ->
+		token(Rest, Delims, <<Acc/binary, Octet:8>>);
+	% Start double-quote segement.
 	<<?DQUOTE, Rest/binary>> ->
 		token(Rest, Delims, ?DQUOTE, Acc);
+	% Start single-quote segement.
 	<<?SQUOTE, Rest/binary>> ->
 		token(Rest, Delims, ?SQUOTE, Acc);
 	<<Octet:8, Rest/binary>> ->
+		% Is character from set of delimiters?
 		case str:chr(Delims, Octet) of
 		-1 ->
+			% Collect character.
 			token(Rest, Delims, <<Acc/binary, Octet:8>>);
 		_ ->
+			% Eat trailing whitespace following delimiter. RFC 4180
+			% says leading and trailing whitespace are significant,
+			% but that can be solved by quoting the whitespace.
 			Span = spn(Rest, ?WHITESPACE),
 			<<_:Span/bytes, Rest2/binary>> = Rest,
 			{Acc, Rest2}
@@ -975,10 +986,13 @@ token(<<>>, _Delims, Quote, Acc) ->
 	throw({error, unbalanced_quotes, Quote, Acc});
 token(Bs, Delims, Quote, Acc) ->
 	case Bs of
-	<<?BACKSLASH, Ch:8, Rest/binary>> ->
-		token(Rest, Delims, Quote, <<Acc/binary, Ch:8>>);
+	% Within quoted string, use paired quotes for a literal quote.
+	<<Quote:8, Quote:8, Rest/binary>> ->
+		token(Rest, Delims, Quote, <<Acc/binary, Quote:8>>);
+	% End of quoted segment.
 	<<Quote:8, Rest/binary>> ->
 		token(Rest, Delims, Acc);
+	% Collect character.
 	<<Octet:8, Rest/binary>> ->
 		token(Rest, Delims, Quote, <<Acc/binary, Octet:8>>)
 	end.

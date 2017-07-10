@@ -563,10 +563,21 @@ isprintable_test_() ->
         ?_assertMatch(false, str:isprintable(<<"abc", 1, 2, 3, "bar">>))
 	].
 
+-define(DQUOTE, 16#22).
+-define(SQUOTE, 16#27).
+-define(BACKSLASH, 16#5C).
+
 token_test_() ->
 	[
 	% Empty string.
 	?_assertMatch({<<>>, <<>>}, str:token(<<"">>)),
+
+	% Backslash escaping.
+	?_assertMatch({<<"ABC">>, <<>>}, str:token(<<"ABC\\">>)),
+	?_assertMatch({<<"  ">>, <<"123">>}, str:token(<<"\\ \\ \t123">>)),
+	?_assertMatch({<<"\'">>, <<>>}, str:token(<<"\\\'">>)),
+	?_assertMatch({<<"\"">>, <<>>}, str:token(<<"\\\"">>)),
+	?_assertMatch({<<?BACKSLASH>>, <<>>}, str:token(<<"\\\\">>)),
 
 	% Default whitespace delimiters.
 	?_assertMatch({<<"ABC">>, <<"123">>}, str:token(<<"ABC 123">>)),
@@ -578,29 +589,35 @@ token_test_() ->
 	?_assertMatch({<<" 123">>, <<>>}, str:token(<<" 123">>, <<";,.">>)),
 	?_assertMatch({<<"ABC">>, <<"123.foo">>}, str:token(<<"ABC, 123.foo">>, <<";,.">>)),
 	?_assertMatch({<<"">>, <<"123.foo">>}, str:token(<<", 123.foo">>, <<";,.">>)),
+	?_assertMatch({<<"ABC;">>, <<"123">>}, str:token(<<"ABC\\;, 123">>, <<";,.">>)),
 
 	% Single quoted string
 	?_assertMatch({<<>>, <<>>}, str:token(<<"''">>)),
 	?_assertMatch({<<"ABC">>, <<>>}, str:token(<<"'ABC'">>)),
 	?_assertMatch({<<>>, <<"123">>}, str:token(<<"'' 123">>)),
-	?_assertMatch({<<$'>>, <<>>}, str:token(<<"'\\\''">>)),
-	?_assertMatch({<<"ABC ' 123">>, <<>>}, str:token(<<"ABC' \\\' '123">>)),
-	?_assertThrow({error, unbalanced_quotes, $', <<"ABC123">>}, str:token(<<"ABC'123">>)),
-	?_assertMatch({<<"ABC'123">>, <<>>}, str:token(<<"ABC\\'123">>)),
+	?_assertMatch({<<?SQUOTE>>, <<>>}, str:token(<<"''''">>)),
+	?_assertMatch({<<"\\">>, <<>>}, str:token(<<"'\\'">>)),
+	?_assertMatch({<<"ABC ' 123">>, <<>>}, str:token(<<"ABC' '' '123">>)),
+	?_assertThrow({error, unbalanced_quotes, ?SQUOTE, <<"ABC123">>}, str:token(<<"ABC'123">>)),
+	?_assertMatch({<<"ABC'123">>, <<>>}, str:token(<<"'ABC''123'">>)),
+	?_assertMatch({<<"ABC\"123">>, <<>>}, str:token(<<"'ABC\"123'">>)),
 
 	% Double quoted string
 	?_assertMatch({<<>>, <<>>}, str:token(<<"\"\"">>)),
 	?_assertMatch({<<"ABC">>, <<>>}, str:token(<<"\"ABC\"">>)),
 	?_assertMatch({<<>>, <<"123">>}, str:token(<<"\"\" 123">>)),
-	?_assertMatch({<<$">>, <<>>}, str:token(<<"\"\\\"\"">>)),
-	?_assertMatch({<<"ABC \" 123">>, <<>>}, str:token(<<"ABC\" \\\" \"123">>)),
-	?_assertThrow({error, unbalanced_quotes, $", <<"ABC123">>}, str:token(<<"ABC\"123">>)),
-	?_assertMatch({<<"ABC\"123">>, <<>>}, str:token(<<"ABC\\\"123">>))
+	?_assertMatch({<<?DQUOTE>>, <<>>}, str:token(<<"\"\"\"\"">>)),
+	?_assertMatch({<<"\\">>, <<>>}, str:token(<<"\"\\\"">>)),
+	?_assertMatch({<<"ABC \" 123">>, <<>>}, str:token(<<"ABC\" \"\" \"123">>)),
+	?_assertThrow({error, unbalanced_quotes, ?DQUOTE, <<"ABC123">>}, str:token(<<"ABC\"123">>)),
+	?_assertMatch({<<"ABC'123">>, <<>>}, str:token(<<"\"ABC'123\"">>)),
+	?_assertMatch({<<"ABC\"123">>, <<>>}, str:token(<<"\"ABC\"\"123\"">>))
 	].
 
 split_test_() ->
 	[
 	?_assertMatch([], str:split(<<"">>)),
 	?_assertMatch([<<"ABC">>, <<"123">>, <<"XYZ">>], str:split(<<"ABC  123  XYZ">>)),
-	?_assertMatch([<<"ABC">>, <<"123">>, <<"XYZ">>], str:split(<<"ABC,  123;  XYZ">>, <<",;">>))
+	?_assertMatch([<<"ABC">>, <<"123">>, <<"XYZ">>], str:split(<<"ABC,  123;  XYZ">>, <<",;">>)),
+	?_assertMatch([<<"ABC  ">>, <<"123\t">>, <<"XYZ">>], str:split(<<"ABC  ,123\t;  XYZ">>, <<",;">>))
 	].
