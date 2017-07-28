@@ -24,9 +24,11 @@
 -define(FNV32_INIT, 2166136261).
 -define(FNV32_MASK, 16#FFFFFFFF).
 
+-spec hash32(binary()) -> integer().
 hash32(Bs) ->
 	hash32(Bs, ?FNV32_INIT).
 
+-spec hash32(binary(), integer()) -> integer().
 -ifdef(FNV32_SHIFT).
 
 hash32(<<>>, Acc) ->
@@ -107,9 +109,11 @@ hash32(<<Octet:8, Rest/binary>>, Acc) ->
 -define(FNV56_INIT, 65300513888988631).
 -define(FNV56_MASK, 16#00FFFFFFFFFFFFFF).
 
+-spec hash56(binary()) -> integer().
 hash56(Bs) ->
 	hash56(Bs, ?FNV56_INIT).
 
+-spec hash56(binary(), integer()) -> integer().
 -ifdef(FNV56_SHIFT).
 
 hash56(<<>>, Acc) ->

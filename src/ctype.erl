@@ -20,39 +20,51 @@
 -define(SPC, 32).
 -define(DEL, 127).
 
+-spec isblank(integer()) -> boolean().
 isblank(Ch) ->
 	Ch =:= 32 orelse Ch =:= ?TAB.
 
+-spec isspace(integer()) -> boolean().
 isspace(Ch) ->
 	Ch =:= 32 orelse (?TAB =< Ch andalso Ch =< ?CR).
 
+-spec isprint(integer()) -> boolean().
 isprint(Ch) ->
 	?SPC =< Ch andalso Ch < ?DEL.
 
+-spec isdigit(integer()) -> boolean().
 isdigit(Ch) ->
 	$0 =< Ch andalso Ch =< $9.
 
+-spec isxdigit(integer()) -> boolean().
 isxdigit(Ch) ->
 	isdigit(Ch) orelse ($A =< Ch andalso Ch =< $F) orelse ($a =< Ch andalso Ch =< $f).
 
+-spec iscntrl(integer()) -> boolean().
 iscntrl(Ch) ->
 	(0 =< Ch andalso Ch < ?SPC) orelse Ch =:= ?DEL.
 
+-spec isupper(integer()) -> boolean().
 isupper(Ch) ->
 	$A =< Ch andalso Ch =< $Z.
 
+-spec islower(integer()) -> boolean().
 islower(Ch) ->
 	$a =< Ch andalso Ch =< $z.
 
+-spec isalpha(integer()) -> boolean().
 isalpha(Ch) ->
 	isupper(Ch) orelse islower(Ch).
 
+-spec isalnum(integer()) -> boolean().
 isalnum(Ch) ->
 	isalpha(Ch) orelse isdigit(Ch).
 
+-spec ispunct(integer()) -> boolean().
 ispunct(Ch) ->
 	?SPC < Ch andalso Ch < ?DEL andalso not isalnum(Ch).
 
+-spec tolower(integer()) -> integer().
 tolower(Ch) ->
 	case isupper(Ch) of
 	true ->
@@ -61,6 +73,7 @@ tolower(Ch) ->
 		Ch
 	end.
 
+-spec toupper(integer()) -> integer().
 toupper(Ch) ->
 	case islower(Ch) of
 	true ->
@@ -69,6 +82,7 @@ toupper(Ch) ->
 		Ch
 	end.
 
+-spec isbase(integer(), integer()) -> boolean().
 isbase(Ch, Base) when 2 =< Base andalso Base =< 36 ->
 	case str:chr(<<"0123456789abcdefghijklmnopqrstuvwxyz">>, tolower(Ch)) of
 	-1 ->
