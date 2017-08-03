@@ -217,19 +217,10 @@ ncpy(<<Ch:8, Rest/binary>>, Length, Acc) ->
 	ncpy(Rest, Length-1, <<Acc/binary, Ch:8>>).
 
 upper(Bs) ->
-	upper(Bs, <<>>).
-upper(<<>>, Acc) ->
-	Acc;
-upper(<<Octet:8, Rest/binary>>, Acc) ->
-	upper(Rest, <<Acc/binary, (ctype:toupper(Octet)):8>>).
+	<< << (ctype:toupper(Octet)) >> || <<Octet>> <= Bs >>.
 
 lower(Bs) ->
-	lower(Bs, <<>>).
-lower(<<>>, Acc) ->
-	Acc;
-lower(<<Octet:8, Rest/binary>>, Acc) ->
-	lower(Rest, <<Acc/binary, (ctype:tolower(Octet)):8>>).
-
+	<< << (ctype:tolower(Octet)) >> || <<Octet>> <= Bs >>.
 
 error(Reason) ->
 	%% Taken from NetBSD 7.1 man error; assumes Erlang uses errno names.
