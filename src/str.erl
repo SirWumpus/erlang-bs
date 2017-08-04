@@ -88,7 +88,7 @@ rev(<<Ch:8, Rest/binary>>, Acc) ->
 
 ltrim(<<>>) ->
 	<<>>;
-ltrim(<<Ch:8, Rest/binary>>) when Ch == 32 orelse (9 =< Ch andalso Ch =< 13) ->
+ltrim(<<Ch:8, Rest/binary>>) when Ch == ?SPC orelse (?TAB =< Ch andalso Ch =< ?CR) ->
 	ltrim(Rest);
 ltrim(Rest) ->
 	Rest.

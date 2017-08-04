@@ -22,11 +22,11 @@
 
 -spec isblank(integer()) -> boolean().
 isblank(Ch) ->
-	Ch =:= 32 orelse Ch =:= ?TAB.
+	Ch =:= ?SPC orelse Ch =:= ?TAB.
 
 -spec isspace(integer()) -> boolean().
 isspace(Ch) ->
-	Ch =:= 32 orelse (?TAB =< Ch andalso Ch =< ?CR).
+	Ch =:= ?SPC orelse (?TAB =< Ch andalso Ch =< ?CR).
 
 -spec isprint(integer()) -> boolean().
 isprint(Ch) ->
