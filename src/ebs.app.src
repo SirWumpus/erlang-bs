@@ -5,5 +5,5 @@
               {description,"C-like string and ctype functions for Erlang binary strings."},
               {links,[{"Github","https://github.com/SirWumpus/erlang-bs"}]},
               {applications,[kernel,stdlib]},
-              {modules,[dtz,str,ctype]},
+              {modules,[ctype,dtz,fnv,str]},
               {files,["README.md","makefile","rebar.config","src","test"]}]}.
