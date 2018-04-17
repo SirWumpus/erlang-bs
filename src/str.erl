@@ -676,7 +676,7 @@ iso_time_zone(Other) ->
 	{badarg, dtz:time_zone_seconds(), Other}.
 
 ptime(Bs, Fmt) ->
-	{Date, _} = calendar:local_time(),
+	{Date, _Time } = calendar:local_time(),
 	ptime(Bs, Fmt, {Date, {0, 0, 0}, dtz:time_zone_seconds()}).
 ptime(Bs, <<>>, DateTimeTz) ->
 	{DateTimeTz, Bs};
@@ -700,7 +700,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			{{Date, Time, Tz}, sub(Bs, Span)}
 		end;
 	$A ->
-		ptime(Bs, <<"%a">>);
+		ptime(Bs, <<"%a">>, {Date, Time, Tz});
 	$b ->
 		Span = cspn(Bs, ?WHITESPACE),
 		Token = sub(Bs, 0, Span),
@@ -711,9 +711,9 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			{{{Year, Index rem 12 + 1, Day}, Time, Tz}, sub(Bs, Span)}
 		end;
 	$B ->
-		ptime(Bs, <<"%b">>);
+		ptime(Bs, <<"%b">>, {Date, Time, Tz});
 	$c ->
-		ptime(Bs, <<"%e %b %Y %H:%M:%S">>);
+		ptime(Bs, <<"%e %b %Y %H:%M:%S">>, {Date, Time, Tz});
 	$C ->
 		case to_int(sub(Bs, 0, 2), 10) of
 		{Century, _} when 0 =< Century andalso Century =< 99 ->
@@ -729,17 +729,17 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			{badarg, Bs}
 		end;
 	$D ->
-		ptime(Bs, <<"%m/%d/%y">>);
+		ptime(Bs, <<"%m/%d/%y">>, {Date, Time, Tz});
 	$e ->
-		ptime(Bs, <<"%d">>);
+		ptime(Bs, <<"%d">>, {Date, Time, Tz});
 	$F ->
-		ptime(Bs, <<"%Y-%m-%d">>);
+		ptime(Bs, <<"%Y-%m-%d">>, {Date, Time, Tz});
 	$G ->
 		throw({error, not_supported});
 	$g ->
 		throw({error, not_supported});
 	$h ->
-		ptime(Bs, <<"%b">>);
+		ptime(Bs, <<"%b">>, {Date, Time, Tz});
 	$H ->
 		case to_int(Bs, 10, 2) of
 		{NewHour, Rest} when 0 =< NewHour andalso NewHour =< 23 ->
@@ -755,9 +755,9 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			{badarg, Bs}
 		end;
 	$k ->
-		ptime(Bs, <<"%H">>);
+		ptime(Bs, <<"%H">>, {Date, Time, Tz});
 	$l ->
-		ptime(Bs, <<"%I">>);
+		ptime(Bs, <<"%I">>, {Date, Time, Tz});
 	$j ->
 		case to_int(Bs, 10, 3) of
 		{DayOfYear, Rest} when 1 =< DayOfYear andalso DayOfYear =< 366 ->
@@ -797,9 +797,9 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			{badarg, Bs}
 		end;
 	$r ->
-		ptime(Bs, <<"%l:%M %p">>);
+		ptime(Bs, <<"%l:%M %p">>, {Date, Time, Tz});
 	$R ->
-		ptime(Bs, <<"%H:%M">>);
+		ptime(Bs, <<"%H:%M">>, {Date, Time, Tz});
 	$S ->
 		case to_int(Bs, 10, 2) of
 		{NewSecond, Rest} when 0 =< NewSecond andalso NewSecond =< 61 ->
@@ -820,7 +820,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 		Span = spn(Bs, ?WHITESPACE),
 		{{Date, Time, Tz}, sub(Bs, Span)};
 	$T ->
-		ptime(Bs, <<"%H:%M:%S">>);
+		ptime(Bs, <<"%H:%M:%S">>, {Date, Time, Tz});
 	$U ->
 		throw({error, not_supported});
 	$u ->

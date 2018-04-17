@@ -498,7 +498,16 @@ ptime_test_() ->
 	?_assertMatch({badarg, <<" boo!">>}, str:ptime(<<"20:35:43 boo!">>,<<"%T%z">>)),
 	?_assertMatch({badarg, <<" boo!">>}, str:ptime(<<"20:35:43 boo!">>,<<"%T %z">>)),
 	?_assertMatch({{_,{0,0,0},-12600}, <<" boo!">>}, str:ptime(<<"-0330 boo!">>,<<"%z">>)),
-	?_assertMatch({{_,{20,35,43},-12600}, <<" boo!">>}, str:ptime(<<"20:35:43 -0330 boo!">>,<<"%T %z">>))
+	?_assertMatch({{_,{20,35,43},-12600}, <<" boo!">>}, str:ptime(<<"20:35:43 -0330 boo!">>,<<"%T %z">>)),
+
+	% Test alias formats accumulate results correctly in combination
+	% with other format specifiers.
+	?_assertMatch({{{2017,4,1},{18,27,15},_Tz}, <<>>}, str:ptime(<<"Sun 2017-04-01 18:27:15">>,<<"%A %F %T">>)),
+	?_assertMatch({{{2017,5,2},{18,27,15},_Tz}, <<>>}, str:ptime(<<"2017 May 02 18:27:15">>,<<"%Y %B %d %T">>)),
+	?_assertMatch({{{2017,5,2},{18,27,15},_Tz}, <<>>}, str:ptime(<<"05/02/17 18:27:15">>,<<"%D %T">>)),
+	?_assertMatch({{{2017,4,1},{18,27,15},_Tz}, <<>>}, str:ptime(<<"2017-04-01 18:27:15">>,<<"%F %T">>)),
+	?_assertMatch({{{2017,4,1},{18,27,0},_Tz}, <<>>}, str:ptime(<<"6:27 pm 2017-04-01">>,<<"%r %F">>)),
+	?_assertMatch({{{2017,4,1},{6,27,0},_Tz}, <<>>}, str:ptime(<<"6:27 2017-04-01">>,<<"%R %F">>))
 	].
 
 to_date_time_test_() ->
