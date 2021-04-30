@@ -7,17 +7,20 @@ C-like string and ctype functions for Erlang binary strings.
 Data Types
 ----------
 
-* Bs = <<"...">>
-* Ch = ascii().
-* Delims = <<"...">>
-* Fmt = <<"...">>
-* Index = integer() >= 0
-* Length = integer() >= 0
+* Bs = binary() ; string
+* Ch = integer()
+* Base = pos_integer()
+* Delims = binary() ; string
+* Fmt = binary() ; string
+* Index = non_neg_integer()
+* Length = non_neg_integer()
 * Date = { Year, Month, Day }
 * Time = { Hour, Minute, Second }
-* Tz = integer() ; time zone offset in seconds, eg. -18000 = -05:00 = EST, -12600 = -03:30 = Newfoundland
-* Pattern = <<"...">> ; sub-string to find
-* EpochSeconds = seconds since 1970-01-01T00:00:00Z.
+* Tz = integer() ; time zone offset in seconds, eg. -18000 = -05:00 = EST, -12600 = -03:30 = Newfoundland NST
+* Dtz = { Date, Time, Tz }
+* Utc = { Date, Time, 0 }
+* Pattern = binary() ; sub-string to find
+* EpochSeconds = non_neg_integer() ; seconds since 1970-01-01T00:00:00Z.
 
 Exports
 -------
@@ -128,70 +131,70 @@ Return binary string error message for Reason.
 ### str:ftime(Fmt, EpochSeconds) -> Bs
 Use binary string Fmt to format Date and Time into Bs.  All ordinary characters are copied as-is, while the following format characters are replaced (similar to strftime(3)).  Without Tz, assumes local time of user $TZ or system when $TZ is unset.  To ensure UTC, use ftime/2 with Tz = 0.
 
-**%A**	is replaced by the ~~locale's~~ English full weekday name.
+**%A** is replaced by the ~~locale's~~ English full weekday name.
 
-**%a**	is replaced by the ~~locale's~~ English abbreviated weekday name.
+**%a** is replaced by the ~~locale's~~ English abbreviated weekday name.
 
-**%B**	is replaced by the ~~locale's~~ English full month name.
+**%B** is replaced by the ~~locale's~~ English full month name.
 
 **%b** or **%h** is replaced by the ~~locale's~~ English abbreviated month name.
 
-**%C**	is replaced by the century (a year divided by 100 and truncated to an integer) as a decimal number [00,99].
+**%C** is replaced by the century (a year divided by 100 and truncated to an integer) as a decimal number [00,99].
 
-**%c**	is replaced by the ~~locale's~~ RFC appropriate date and time representation, ``%e %b %Y %H:%M:%S''.
+**%c** is replaced by the ~~locale's~~ RFC appropriate date and time representation, ``%e %b %Y %H:%M:%S''.
 
-**%D**	is replaced by the date in the format ``%m/%d/%y''.
+**%D** is replaced by the date in the format ``%m/%d/%y''.
 
-**%d**	is replaced by the day of the month as a decimal number [01,31].
+**%d** is replaced by the day of the month as a decimal number [01,31].
 
-**%e**	is replaced by the day of month as a decimal number [1,31]; single digits are preceded by a blank.
+**%e** is replaced by the day of month as a decimal number [1,31]; single digits are preceded by a blank.
 
-**%F**	is replaced by the date in the format ``%Y-%m-%d'' (the ISO 8601 date format).
+**%F** is replaced by the date in the format ``%Y-%m-%d'' (the ISO 8601 date format).
 
-**%H**	is replaced by the hour (24-hour clock) as a decimal number [00,23].
+**%H** is replaced by the hour (24-hour clock) as a decimal number [00,23].
 
-**%I**	is replaced by the hour (12-hour clock) as a decimal number [01,12].
+**%I** is replaced by the hour (12-hour clock) as a decimal number [01,12].
 
-**%j**	is replaced by the day of the year as a decimal number [001,366].
+**%j** is replaced by the day of the year as a decimal number [001,366].
 
-**%k**	is replaced by the hour (24-hour clock) as a decimal number [0,23]; single digits are preceded by a blank.
+**%k** is replaced by the hour (24-hour clock) as a decimal number [0,23]; single digits are preceded by a blank.
 
-**%l**	is replaced by the hour (12-hour clock) as a decimal number [1,12]; single digits are preceded by a blank.
+**%l** is replaced by the hour (12-hour clock) as a decimal number [1,12]; single digits are preceded by a blank.
 
-**%M**	is replaced by the minute as a decimal number [00,59].
+**%M** is replaced by the minute as a decimal number [00,59].
 
-**%m**	is replaced by the month as a decimal number [01,12].
+**%m** is replaced by the month as a decimal number [01,12].
 
-**%n**	is replaced by a newline.
+**%n** is replaced by a newline.
 
-**%p**	is replaced by ~~the locale's equivalent of~~ either "am" or "pm".
+**%p** is replaced by ~~the locale's equivalent of~~ either "am" or "pm".
 
-**%R**	is replaced by the time in the format ``%H:%M''.
+**%R** is replaced by the time in the format ``%H:%M''.
 
-**%r**	is replaced by the ~~locale's~~ representation of 12-hour clock time using AM/PM notation.
+**%r** is replaced by the ~~locale's~~ representation of 12-hour clock time using AM/PM notation.
 
-**%s**	is replaced by the number of UTC seconds since the Epoch.
+**%s** is replaced by the number of UTC seconds since the Epoch.
 
-**%T**	is replaced by the time in the format ``%H:%M:%S''.
+**%T** is replaced by the time in the format ``%H:%M:%S''.
 
-**%t**	is replaced by a tab.
+**%t** is replaced by a tab.
 
-**%V**	is replaced by the week number of the year (Monday as the first day of the week) as a decimal number [01,53]. According to ISO 8601 the week containing January 1 is week 1 if it has four or more days in the new year, otherwise it is week 53 of the previous year, and the next week is week 1.
+**%V** is replaced by the week number of the year (Monday as the first day of the week) as a decimal number [01,53]. According to ISO 8601 the week containing January 1 is week 1 if it has four or more days in the new year, otherwise it is week 53 of the previous year, and the next week is week 1.
 
-**%v**	is replaced by the date in the format ``%e-%b-%Y''.
+**%v** is replaced by the date in the format ``%e-%b-%Y''.
 
-**%Y**	is replaced by the year with century as a decimal number.
+**%Y** is replaced by the year with century as a decimal number.
 
-**%y**	is replaced by the year without century as a decimal number [00,99].
+**%y** is replaced by the year without century as a decimal number [00,99].
 
-**%z**	is replaced by the offset from the Prime Meridian in the format +HHMM or -HHMM (ISO 8601) as appropriate, with positive values representing locations east of Greenwich, or by the empty string if this is not determinable.  ``[-]hhmm''.
+**%z** is replaced by the offset from the Prime Meridian in the format +HHMM or -HHMM (ISO 8601) as appropriate, with positive values representing locations east of Greenwich, or by the empty string if this is not determinable.  ``[-]hhmm''.
 
-**%%**	is replaced by `%'.
+**%%** is replaced by `%'.
 
 
 - - -
 ### str:isprintable(Bs) -> boolean()
-True if the binary string consists only of printable characters, ie. every character is one of  `ctype:isprint/1`, `ctype:isspace/1`, or ASCII control characters `BEL`, `BS`, or `ESC`.
+True if the binary string consists only of printable characters, ie. every character is one of `ctype:isprint/1`, `ctype:isspace/1`, or ASCII control characters `BEL`, `BS`, or `ESC`.
 
 - - -
 ### str:len(Bs) -> Length
@@ -342,7 +345,7 @@ Attempt to parse the leading portion of Bs as an ISO 8601, RFC 2822, or ctime() 
 
 - - -
 ### str:to_int(Bs, Base) -> { integer(), << Rest >> } | badarg
-Return a tulpe of the leading parsed integer and remaining binary string.  The parsed integer string can be  padded with leading zeros.  If base is zero or 16, the string may then include a '0x' prefix, and the number will be read in base 16; otherwise, a zero base is taken as 10 (decimal) unless the next character is '0', in which case it is taken as 8 (octal).  `badarg` is returned if no input is consumed.
+Return a tulpe of the leading parsed integer and remaining binary string.  The parsed integer string can be padded with leading zeros.  If base is zero or 16, the string may then include a '0x' prefix, and the number will be read in base 16; otherwise, a zero base is taken as 10 (decimal) unless the next character is '0', in which case it is taken as 8 (octal).  `badarg` is returned if no input is consumed.
 
 - - -
 ### str:tok(Bs, Delims) -> {<< Token >>, << Rest >>}
@@ -380,8 +383,8 @@ Equivalent to `sunday:search(Bs, sunday:init(Pattern, MaxErr))`.
 
 - - -
 ### sunday:search(Bs, {Pattern, MaxErr, DeltaMap}) -> Index | -1
-
 Generalised Boyer-Moore-Sunday approximate string matching for MaxErr mismatches.  For MaxErr=0, the program performs exact string searching.  Return the index of the first occurence of Pattern in Bs; otherwise -1 if not found.
+
 
 References
 ----------
@@ -411,7 +414,7 @@ Presention by Kuei-hao Chen;
 Copyright
 ---------
 
-Copyright 2017 by Anthony Howe.  All rights reserved.
+Copyright 2017, 2021 by Anthony Howe.  All rights reserved.
 
 
 MIT License

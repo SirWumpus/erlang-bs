@@ -1,40 +1,64 @@
 -module(dtz).
 -export([
-	to_epoch_seconds/1, time_zone_seconds/0, to_utc_seconds/1,
-	to_utc/1, to_local/1, from_epoch_seconds/1
+	to_epoch_seconds/1, from_epoch_seconds/1, time_zone_seconds/0, to_utc/1, to_local/1
 ]).
 
-to_epoch_seconds({Date = {Year, _Month, _Day}, {Hour, Min, Sec}}) ->
-	Yday = calendar:date_to_gregorian_days(Date) - calendar:date_to_gregorian_days(Year, 1, 1),
-	Sec + Min * 60 + Hour * 3600 + Yday * 86400 + (Year - 1970) * 31536000 + ((Year - 1969) div 4) * 86400.
+-type year()	:: pos_integer().
+-type month()	:: 1..12.
+-type day()	:: 1..31.
+-type hour()	:: 0..23.
+-type minute()	:: 0..59.
+-type second()	:: 0..59.
+-type tz()	:: integer().			% Offset seconds from UTC; 0 = UTC.
+-type date()	:: {year(), month(), day()}.
+-type time()	:: {hour(), minute(), second()}.
+-type dtz()	:: {date(), time(), tz()}.
+-type utc()	:: {date(), time(), 0}.
+-type epoch()	:: non_neg_integer().		% Seconds since 1970-01-01T00:00:00Z.
 
+-export_type([
+	year/0,
+	month/0,
+	day/0,
+	hour/0,
+	minute/0,
+	second/0,
+	tz/0,
+	date/0,
+	time/0,
+	dtz/0,
+	utc/0,
+	epoch/0
+]).
+
+-spec to_epoch_seconds(dtz()) -> epoch().
+to_epoch_seconds({Date, Time}) ->
+	% Without a timezone, assume UTC.
+	to_epoch_seconds({Date, Time, 0});
+
+to_epoch_seconds({Date = {Year, _Month, _Day}, {Hour, Min, Sec}, Tz}) ->
+	Yday = calendar:date_to_gregorian_days(Date) - calendar:date_to_gregorian_days(Year, 1, 1),
+	Sec + Min * 60 + Hour * 3600 + Yday * 86400 + (Year - 1970) * 31536000 + ((Year - 1969) div 4) * 86400 - Tz.
+
+-spec time_zone_seconds() -> tz().
 time_zone_seconds() ->
+	% This relies on the system timezone or a correctly specified $TZ.
 	Local = erlang:localtime(),
 	Utc = erlang:localtime_to_universaltime(Local),
 	to_epoch_seconds(Local) - to_epoch_seconds(Utc).
 
-to_utc_seconds({Date, Time}) ->
-	% Assume local time zone.
-	to_utc_seconds({Date, Time, time_zone_seconds()});
-to_utc_seconds({Date, Time, Tz}) ->
-	to_epoch_seconds({Date, Time}) - Tz.
+-spec to_utc(dtz()) -> utc().
+to_utc(Dtz) ->
+	Epoch = to_epoch_seconds(Dtz),
+	from_epoch_seconds(Epoch).
 
-to_utc({DTZ, Rest}) ->
-	{to_utc(DTZ), Rest};
-to_utc(DTZ) ->
-	UTC = to_utc_seconds(DTZ),
-	Timestamp = {UTC div 1000000, UTC rem 1000000, 0},
-	{Date, Time} = calendar:now_to_universal_time(Timestamp),
-	{Date, Time, 0}.
-
-to_local({DTZ, Rest}) ->
-	{to_local(DTZ), Rest};
-to_local(DTZ) ->
-	UTC = to_utc_seconds(DTZ),
-	Timestamp = {UTC div 1000000, UTC rem 1000000, 0},
-	{Date, Time} = calendar:now_to_local_time(Timestamp),
+-spec to_local(dtz()) -> dtz().
+to_local(Dtz) ->
+	Epoch = to_epoch_seconds(Dtz) + time_zone_seconds(),
+	{Date, Time, 0} = from_epoch_seconds(Epoch),
 	{Date, Time, time_zone_seconds()}.
 
+-spec from_epoch_seconds(epoch()) -> dtz().
 from_epoch_seconds(EpochSeconds) ->
 	Timestamp = {EpochSeconds div 1000000, EpochSeconds rem 1000000, 0},
 	{Date, Time} = calendar:now_to_universal_time(Timestamp),

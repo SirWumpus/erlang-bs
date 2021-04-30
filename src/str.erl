@@ -442,7 +442,7 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time, Tz}, Acc) ->
 		Seconds = pad_int(Sec, $0, 2),
 		<<Acc/binary, Seconds/binary>>;
 	$s ->
-		UTC = integer_to_binary(dtz:to_utc_seconds({Date, Time, Tz})),
+		UTC = integer_to_binary(dtz:to_epoch_seconds({Date, Time, Tz})),
 		<<Acc/binary, UTC/binary>>;
 	$T ->
 		IsoTime = ftime(<<"%H:%M:%S">>, {Date, Time, Tz}),
@@ -809,10 +809,8 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 		end;
 	$s ->
 		case to_int(Bs, 10) of
-		{UTC, Rest} ->
-			Timestamp = {UTC div 1000000, UTC rem 1000000, 0},
-			{NewDate, NewTime} = calendar:now_to_local_time(Timestamp),
-			{{NewDate, NewTime, dtz:time_zone_seconds()}, Rest};
+		{Sec, Rest} ->
+			{dtz:from_epoch_seconds(Sec), Rest};
 		_ ->
 			{badarg, Bs}
 		end;
