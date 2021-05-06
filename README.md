@@ -151,6 +151,10 @@ Use binary string Fmt to format Date and Time into Bs.  All ordinary characters 
 
 **%F** is replaced by the date in the format ``%Y-%m-%d'' (the ISO 8601 date format).
 
+**%G** is replaced by the ISO 8601 year with century as a decimal number.
+
+**%g** is replaced by the ISO 8601 year without century as a decimal number (00-99).  This is the year that includes the greater part of the week, where Monday as the first day of a week.  See also `%V`.
+
 **%H** is replaced by the hour (24-hour clock) as a decimal number [00,23].
 
 **%I** is replaced by the hour (12-hour clock) as a decimal number [01,12].
@@ -178,6 +182,8 @@ Use binary string Fmt to format Date and Time into Bs.  All ordinary characters 
 **%T** is replaced by the time in the format ``%H:%M:%S''.
 
 **%t** is replaced by a tab.
+
+**%u** is replaced by the weekday (Monday as the first day of the week) as a decimal number [1,7].
 
 **%V** is replaced by the week number of the year (Monday as the first day of the week) as a decimal number [01,53]. According to ISO 8601 the week containing January 1 is week 1 if it has four or more days in the new year, otherwise it is week 53 of the previous year, and the next week is week 1.
 

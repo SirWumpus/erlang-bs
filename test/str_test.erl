@@ -339,7 +339,7 @@ pad_sign_int_test_() ->
 ftime_test_() ->
 	[
 	?_assertMatch(<<>>, str:ftime(<<>>, {{2017,4,1},{17,37,46}})),
-	?_assertThrow({error, einval}, str:ftime(<<"bogus %@">>, {{2017,4,1},{17,37,46}})),
+	?_assertThrow({enotsup, $@}, str:ftime(<<"bogus %@">>, {{2017,4,1},{17,37,46}})),
 	?_assertMatch(<<"Day of week Sat">>, str:ftime(<<"Day of week %a">>, {{2017,4,1},{17,37,46}})),
 	?_assertMatch(<<"Day of week Saturday">>, str:ftime(<<"Day of week %A">>, {{2017,4,1},{17,37,46}})),
 	?_assertMatch(<<"Full month April">>, str:ftime(<<"Full month %B">>, {{2017,4,1},{17,37,46}})),
@@ -369,15 +369,55 @@ ftime_test_() ->
 	?_assertMatch(<<"St. Johns, NL -0330">>, str:ftime(<<"St. Johns, NL %z">>, {{2017,4,1},{17,37,46}, -12600})),
 	?_assertMatch(<<"\t%\n">>, str:ftime(<<"%t%%%n">>, {{2017,4,1},{17,37,46}})),
 	?_assertMatch(<<"20170527T175300Z">>, str:ftime(<<"%Y%m%dT%H%M%SZ">>, 1495907580)),
-	?_assertThrow({error, not_supported}, str:ftime(<<"%G">>, {{2017,4,1},{17,37,46}})),
-	?_assertThrow({error, not_supported}, str:ftime(<<"%g">>, {{2017,4,1},{17,37,46}})),
-	?_assertThrow({error, not_supported}, str:ftime(<<"%U">>, {{2017,4,1},{17,37,46}})),
-	?_assertThrow({error, not_supported}, str:ftime(<<"%u">>, {{2017,4,1},{17,37,46}})),
-	?_assertThrow({error, not_supported}, str:ftime(<<"%W">>, {{2017,4,1},{17,37,46}})),
-	?_assertThrow({error, not_supported}, str:ftime(<<"%w">>, {{2017,4,1},{17,37,46}})),
-	?_assertThrow({error, not_supported}, str:ftime(<<"%X">>, {{2017,4,1},{17,37,46}})),
-	?_assertThrow({error, not_supported}, str:ftime(<<"%x">>, {{2017,4,1},{17,37,46}})),
-	?_assertThrow({error, not_supported}, str:ftime(<<"%Z">>, {{2017,4,1},{17,37,46}}))
+
+	% ISO week and day numbers.
+	% https://webspace.science.uu.nl/~gent0113/calendar/isocalendar.htm
+	?_assertMatch(<<"1999W52-6">>, str:ftime(<<"%GW%V-%u">>, {{2000,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2000W52-7">>, str:ftime(<<"%GW%V-%u">>, {{2000,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2001W01-1">>, str:ftime(<<"%GW%V-%u">>, {{2001,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2002W01-1">>, str:ftime(<<"%GW%V-%u">>, {{2001,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2002W01-2">>, str:ftime(<<"%GW%V-%u">>, {{2002,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2003W01-2">>, str:ftime(<<"%GW%V-%u">>, {{2002,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2003W01-3">>, str:ftime(<<"%GW%V-%u">>, {{2003,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2004W01-3">>, str:ftime(<<"%GW%V-%u">>, {{2003,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2004W01-4">>, str:ftime(<<"%GW%V-%u">>, {{2004,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2004W53-5">>, str:ftime(<<"%GW%V-%u">>, {{2004,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2004W53-6">>, str:ftime(<<"%GW%V-%u">>, {{2005,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2005W52-6">>, str:ftime(<<"%GW%V-%u">>, {{2005,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2005W52-7">>, str:ftime(<<"%GW%V-%u">>, {{2006,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2006W52-7">>, str:ftime(<<"%GW%V-%u">>, {{2006,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2007W01-1">>, str:ftime(<<"%GW%V-%u">>, {{2007,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2008W01-1">>, str:ftime(<<"%GW%V-%u">>, {{2007,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2008W01-2">>, str:ftime(<<"%GW%V-%u">>, {{2008,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2009W01-3">>, str:ftime(<<"%GW%V-%u">>, {{2008,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2009W01-4">>, str:ftime(<<"%GW%V-%u">>, {{2009,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2009W53-4">>, str:ftime(<<"%GW%V-%u">>, {{2009,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2009W53-5">>, str:ftime(<<"%GW%V-%u">>, {{2010,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2010W52-5">>, str:ftime(<<"%GW%V-%u">>, {{2010,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2010W52-6">>, str:ftime(<<"%GW%V-%u">>, {{2011,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2011W52-6">>, str:ftime(<<"%GW%V-%u">>, {{2011,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2011W52-7">>, str:ftime(<<"%GW%V-%u">>, {{2012,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2013W01-1">>, str:ftime(<<"%GW%V-%u">>, {{2012,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2013W01-2">>, str:ftime(<<"%GW%V-%u">>, {{2013,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2014W01-2">>, str:ftime(<<"%GW%V-%u">>, {{2013,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2014W01-3">>, str:ftime(<<"%GW%V-%u">>, {{2014,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2015W01-3">>, str:ftime(<<"%GW%V-%u">>, {{2014,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2015W01-4">>, str:ftime(<<"%GW%V-%u">>, {{2015,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2015W53-4">>, str:ftime(<<"%GW%V-%u">>, {{2015,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"2015W53-5">>, str:ftime(<<"%GW%V-%u">>, {{2016,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"2016W52-6">>, str:ftime(<<"%GW%V-%u">>, {{2016,12,31},{0,0,0}, 0})),
+
+	?_assertMatch(<<"20W01-2">>, str:ftime(<<"%gW%V-%u">>, {{2019,12,31},{0,0,0}, 0})),
+	?_assertMatch(<<"20W01-3">>, str:ftime(<<"%gW%V-%u">>, {{2020,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"24W01-1">>, str:ftime(<<"%gW%V-%u">>, {{2024,1,1},{0,0,0}, 0})),
+	?_assertMatch(<<"25W01-2">>, str:ftime(<<"%gW%V-%u">>, {{2024,12,31},{0,0,0}, 0})),
+
+	?_assertThrow({enotsup, $U}, str:ftime(<<"%U">>, {{2017,4,1},{17,37,46}})),
+	?_assertThrow({enotsup, $W}, str:ftime(<<"%W">>, {{2017,4,1},{17,37,46}})),
+	?_assertThrow({enotsup, $w}, str:ftime(<<"%w">>, {{2017,4,1},{17,37,46}})),
+	?_assertThrow({enotsup, $X}, str:ftime(<<"%X">>, {{2017,4,1},{17,37,46}})),
+	?_assertThrow({enotsup, $x}, str:ftime(<<"%x">>, {{2017,4,1},{17,37,46}})),
+	?_assertThrow({enotsup, $Z}, str:ftime(<<"%Z">>, {{2017,4,1},{17,37,46}}))
 	].
 
 tr_test_() ->
@@ -491,6 +531,7 @@ ptime_test_() ->
 	?_assertMatch({badarg, <<"ibm">>}, str:ptime(<<"ibm">>,<<"%p">>)),
 	?_assertMatch({{_,{20,35,0},_Tz}, <<>>}, str:ptime(<<"20:35">>,<<"%R">>)),
 	?_assertMatch({{{2017,4,6},{00,55,20},0}, <<>>}, str:ptime(<<"1491440120">>,<<"%s">>)),
+	?_assertMatch({badarg, <<"xyz">>}, str:ptime(<<"xyz">>,<<"%s">>)),
 	?_assertMatch({{_,{20,35,43},_Tz}, <<>>}, str:ptime(<<"20:35:43">>,<<"%T">>)),
 	?_assertMatch({badarg, <<"boo!">>}, str:ptime(<<"boo!">>,<<"%z">>)),
 	?_assertMatch({{_,{0,0,0},-12600}, <<>>}, str:ptime(<<"-0330">>,<<"%z">>)),
@@ -507,7 +548,9 @@ ptime_test_() ->
 	?_assertMatch({{{2017,5,2},{18,27,15},_Tz}, <<>>}, str:ptime(<<"05/02/17 18:27:15">>,<<"%D %T">>)),
 	?_assertMatch({{{2017,4,1},{18,27,15},_Tz}, <<>>}, str:ptime(<<"2017-04-01 18:27:15">>,<<"%F %T">>)),
 	?_assertMatch({{{2017,4,1},{18,27,0},_Tz}, <<>>}, str:ptime(<<"6:27 pm 2017-04-01">>,<<"%r %F">>)),
-	?_assertMatch({{{2017,4,1},{6,27,0},_Tz}, <<>>}, str:ptime(<<"6:27 2017-04-01">>,<<"%R %F">>))
+	?_assertMatch({{{2017,4,1},{6,27,0},_Tz}, <<>>}, str:ptime(<<"6:27 2017-04-01">>,<<"%R %F">>)),
+
+	?_assertThrow({enotsup, $G}, str:ptime(<<"2021">>,<<"%G">>))
 	].
 
 to_date_time_test_() ->

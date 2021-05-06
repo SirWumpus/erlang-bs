@@ -395,9 +395,13 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time, Tz}, Acc) ->
 		IsoDate = ftime(<<"%Y-%m-%d">>, {Date, Time, Tz}),
 		<<Acc/binary, IsoDate/binary>>;
 	$G ->
-		throw({error, not_supported});
+		{YearOfWeek0, _WeekNum} = calendar:iso_week_number(Date),
+		YearOfWeek1 = pad_int(YearOfWeek0, $0, 4),
+		<<Acc/binary, YearOfWeek1/binary>>;
 	$g ->
-		throw({error, not_supported});
+		{YearOfWeek0, _WeekNum} = calendar:iso_week_number(Date),
+		YearOfWeek1 = pad_int(YearOfWeek0 rem 100, $0, 2),
+		<<Acc/binary, YearOfWeek1/binary>>;
 	$H ->
 		Hr = pad_int(Hour, $0, 2),
 		<<Acc/binary, Hr/binary>>;
@@ -446,33 +450,38 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time, Tz}, Acc) ->
 		<<Acc/binary, IsoTime/binary>>;
 	$t ->
 		<<Acc/binary, $\t>>;
-	$U ->
-		throw({error, not_supported});
+% 	$U ->
+% 		throw({enotsup, Ch});
 	$u ->
-		throw({error, not_supported});
+		% Week day counting from Monday 1..7.
+		WeekDay0 = calendar:day_of_the_week(Date),
+		WeekDay1 = pad_int(WeekDay0, $0, 0),
+		<<Acc/binary, WeekDay1/binary>>;
 	$V ->
-		{_Year, Week} = calendar:iso_week_number(Date),
-		WeekNum = pad_int(Week, $0, 2),
-		<<Acc/binary, WeekNum/binary>>;
+		% https://en.wikipedia.org/wiki/ISO_week_date
+		% https://webspace.science.uu.nl/~gent0113/calendar/isocalendar.htm
+		{_YearOfWeek, WeekNum0} = calendar:iso_week_number(Date),
+		WeekNum1 = pad_int(WeekNum0, $0, 2),
+		<<Acc/binary, WeekNum1/binary>>;
 	$v ->
 		Vdate = ftime(<<"%e-%b-%Y">>, {Date, Time, Tz}),
 		<<Acc/binary, Vdate/binary>>;
-	$W ->
-		throw({error, not_supported});
-	$w ->
-		throw({error, not_supported});
-	$X ->
-		throw({error, not_supported});
-	$x ->
-		throw({error, not_supported});
+% 	$W ->
+% 		throw({enotsup, Ch});
+%	$w ->
+% 		throw({enotsup, Ch});
+% 	$X ->
+% 		throw({enotsup, Ch});
+% 	$x ->
+% 		throw({enotsup, Ch});
 	$Y ->
 		FullYr = pad_int(Year, $0, 4),
 		<<Acc/binary, FullYr/binary>>;
 	$y ->
 		ShortYr = pad_int(Year rem 100, $0, 2),
 		<<Acc/binary, ShortYr/binary>>;
-	$Z ->
-		throw({error, not_supported});
+% 	$Z ->
+% 		throw({enotsup, Ch});
 	$z ->
 		TzHr = pad_sign_int(Tz div 3600, $0, 3),
 		TzMn = pad_int(abs((Tz rem 3600) div 60), $0, 2),
@@ -480,7 +489,7 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time, Tz}, Acc) ->
 	$% ->
 		<<Acc/binary, $%>>;
 	_ ->
-		throw({error, einval})
+		throw({enotsup, Ch})
 	end,
 	ftime(Rest, {Date, Time, Tz}, NewAcc);
 ftime(<<Ch:8, Rest/binary>>, DateTime, Acc) ->
@@ -731,10 +740,10 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 		ptime(Bs, <<"%d">>, {Date, Time, Tz});
 	$F ->
 		ptime(Bs, <<"%Y-%m-%d">>, {Date, Time, Tz});
-	$G ->
-		throw({error, not_supported});
-	$g ->
-		throw({error, not_supported});
+% 	$G ->
+% 		throw({enotsup, Ch});
+% 	$g ->
+% 		throw({enotsup, Ch});
 	$h ->
 		ptime(Bs, <<"%b">>, {Date, Time, Tz});
 	$H ->
@@ -816,22 +825,22 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 		{{Date, Time, Tz}, sub(Bs, Span)};
 	$T ->
 		ptime(Bs, <<"%H:%M:%S">>, {Date, Time, Tz});
-	$U ->
-		throw({error, not_supported});
-	$u ->
-		throw({error, not_supported});
-	$V ->
-		throw({error, not_supported});
-	$v ->
-		throw({error, not_supported});
-	$W ->
-		throw({error, not_supported});
-	$w ->
-		throw({error, not_supported});
-	$X ->
-		throw({error, not_supported});
-	$x ->
-		throw({error, not_supported});
+% 	$U ->
+% 		throw({enotsup, Ch});
+% 	$u ->
+% 		throw({enotsup, Ch});
+% 	$V ->
+% 		throw({enotsup, Ch});
+% 	$v ->
+% 		throw({enotsup, Ch});
+% 	$W ->
+% 		throw({enotsup, Ch});
+% 	$w ->
+% 		throw({enotsup, Ch});
+% 	$X ->
+% 		throw({enotsup, Ch});
+% 	$x ->
+% 		throw({enotsup, Ch});
 	$Y ->
 		{NewYear, Rest} = to_int(Bs, 10),
 		{{{NewYear, Month, Day}, Time, Tz}, Rest};
@@ -847,8 +856,8 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 		_ ->
 			{badarg, Bs}
 		end;
-	$Z ->
-		throw({error, not_supported});
+% 	$Z ->
+% 		throw({enotsup, Ch});
 	$z ->
 		case iso_time_zone(Bs) of
 		{ok, NewTz, Rest} ->
@@ -863,7 +872,9 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			{badarg, Bs};
 		Pct == $% ->
 			{{Date, Time, Tz}, Rest}
-		end
+		end;
+	_ ->
+		throw({enotsup, Ch})
 	end,
 	ptime(Rest1, Fmt, DateTimeTz);
 ptime(<<Ch:8, Rest/binary>>, <<Ch:8, Fmt/binary>>, DateTimeTz) ->
