@@ -9,7 +9,7 @@ Data Types
 
 * Bs = binary() ; string
 * Ch = integer()
-* Base = pos_integer()
+* Base = 0 | 2..36
 * Delims = binary() ; string
 * Fmt = binary() ; string
 * Index = non_neg_integer()
@@ -21,6 +21,7 @@ Data Types
 * Utc = { Date, Time, 0 }
 * Pattern = binary() ; sub-string to find
 * EpochSeconds = non_neg_integer() ; seconds since 1970-01-01T00:00:00Z.
+
 
 Exports
 -------
@@ -99,7 +100,7 @@ Concatenate two binary strings.
 
 - - -
 ### str:chr(Bs, Ch) ->  Index | -1
-Return index of first occurrence of character in the binary string; otherwise -1 if not found.
+Return index of first occurrence of character in the binary string; otherwise `-1` if not found.
 
 - - -
 ### str:casecmp(Bs1, Bs2) -> integer()
@@ -107,7 +108,7 @@ Return an integer greater than, equal to, or less than 0 according to whether ca
 
 - - -
 ### str:casestr(Bs, Pattern) -> Index | -1
-Return the index of the first occurence of the case-less Pattern in Bs; otherwise -1 if not found.
+Return the index of the first occurence of the case-less Pattern in Bs; otherwise `-1` if not found.
 
 - - -
 ### str:cmp(Bs1, Bs2) -> integer() 
@@ -141,15 +142,15 @@ Use binary string Fmt to format Date and Time into Bs.  All ordinary characters 
 
 **%C** is replaced by the century (a year divided by 100 and truncated to an integer) as a decimal number [00,99].
 
-**%c** is replaced by the ~~locale's~~ RFC appropriate date and time representation, ``%e %b %Y %H:%M:%S''.
+**%c** is replaced by the ~~locale's~~ RFC appropriate date and time representation, `%e %b %Y %H:%M:%S`.
 
-**%D** is replaced by the date in the format ``%m/%d/%y''.
+**%D** is replaced by the date in the format `%m/%d/%y`.
 
 **%d** is replaced by the day of the month as a decimal number [01,31].
 
 **%e** is replaced by the day of month as a decimal number [1,31]; single digits are preceded by a blank.
 
-**%F** is replaced by the date in the format ``%Y-%m-%d'' (the ISO 8601 date format).
+**%F** is replaced by the date in the format `%Y-%m-%d` (the ISO 8601 date format).
 
 **%G** is replaced by the ISO 8601 year with century as a decimal number.
 
@@ -173,13 +174,13 @@ Use binary string Fmt to format Date and Time into Bs.  All ordinary characters 
 
 **%p** is replaced by ~~the locale's equivalent of~~ either "am" or "pm".
 
-**%R** is replaced by the time in the format ``%H:%M''.
+**%R** is replaced by the time in the format `%H:%M`.
 
 **%r** is replaced by the ~~locale's~~ representation of 12-hour clock time using AM/PM notation.
 
 **%s** is replaced by the number of UTC seconds since the Epoch.
 
-**%T** is replaced by the time in the format ``%H:%M:%S''.
+**%T** is replaced by the time in the format `%H:%M:%S`.
 
 **%t** is replaced by a tab.
 
@@ -187,13 +188,13 @@ Use binary string Fmt to format Date and Time into Bs.  All ordinary characters 
 
 **%V** is replaced by the week number of the year (Monday as the first day of the week) as a decimal number [01,53]. According to ISO 8601 the week containing January 1 is week 1 if it has four or more days in the new year, otherwise it is week 53 of the previous year, and the next week is week 1.
 
-**%v** is replaced by the date in the format ``%e-%b-%Y''.
+**%v** is replaced by the date in the format `%e-%b-%Y`.
 
 **%Y** is replaced by the year with century as a decimal number.
 
 **%y** is replaced by the year without century as a decimal number [00,99].
 
-**%z** is replaced by the offset from the Prime Meridian in the format +HHMM or -HHMM (ISO 8601) as appropriate, with positive values representing locations east of Greenwich, or by the empty string if this is not determinable.  ``[-]hhmm''.
+**%z** is replaced by the offset from the Prime Meridian in the format +HHMM or -HHMM (ISO 8601) as appropriate, with positive values representing locations east of Greenwich, or by the empty string if this is not determinable.  `[+-]hhmm`.
 
 **%%** is replaced by `%'.
 
@@ -239,8 +240,8 @@ Return a binary string with the decimal integer right justified to the minimum f
 Return a binary string with the signed decimal integer right justified to the minimum field width; numbers shorter than the field width are left padded.  If Pad is the zero (0) character, then the plus or minus sign appears ahead of the zero padding.
 
 - - -
-### str:ptime(Bs, Fmt) -> { {Date, Time, Tz}, << Rest >> } | {badarg, << Rest >>}
-Parse the leading date-time of Bs according to Fmt and return a date-time-tz tuple and the remainder of the string not consumed.  If a time zone conversion is not specified in the Fmt, then the local time zone of the user's $TZ or system is assumed.  If there is a parse error, badarg and remainder of the binary string where the parse failed is returned.
+### str:ptime(Bs, Fmt) -> { {Date, Time, Tz}, << Rest >> } | {badarg, << Here >>}
+Parse the leading date-time of Bs according to Fmt and return a date-time-tz tuple and the remainder of the string not consumed.  If a time zone conversion is not specified in the Fmt, then the local time zone of the user's `$TZ` or system is assumed.  If there is a parse error, `badarg` and remainder of the binary string where the parse failed is returned.
 
 The format string consists of zero or more conversion specifications, whitespace characters as defined by `ctype:isspace()`, and ordinary characters.  Whitespace matches zero or more whitespace characters and ordinary characters match themselves.  The following `%` format conversions are supportted:
 
@@ -252,9 +253,7 @@ The format string consists of zero or more conversion specifications, whitespace
 
 **%B** the same as %b.
 
-**%c** the date and time, using ~~the locale's date and time format~~ ``%e %b %Y %H:%M:%S''.
-
-**%C** the century number [0,99]; leading zeros are permitted but not required.  This conversion should be used in conjunction with the %y conversion.
+**%c** the date and time, using ~~the locale's date and time format~~ `%e %b %Y %H:%M:%S`.
 
 **%d** the day of month [1,31]; leading zeros are permitted but not required.
 
@@ -284,7 +283,7 @@ The format string consists of zero or more conversion specifications, whitespace
 
 **%p** ~~the locale's equivalent of~~ AM or PM.  Case is ignored.
 
-**%r** the time (12-hour clock) with %p, ~~using the locale's time format~~ ``%l:%M %p''.
+**%r** the time (12-hour clock) with %p, ~~using the locale's time format~~ `%l:%M %p`.
 
 **%R** the time as %H:%M.
 
@@ -306,7 +305,7 @@ The format string consists of zero or more conversion specifications, whitespace
 
 - - -
 ### str:rchr(Bs, Ch) ->  Index | -1
-Return index of last occurrence of character in the binary string; otherwise -1 if not found.
+Return index of last occurrence of character in the binary string; otherwise `-1` if not found.
 
 - - -
 ### str:rpad(Bs, Pad, Width) -> Bs
@@ -335,7 +334,7 @@ Return the number of leading delimiters in the binary string.
 
 - - -
 ### str:str(Bs, Pattern) -> Index | -1
-Return the index of the first occurence of Pattern in Bs; otherwise -1 if not found.
+Return the index of the first occurence of Pattern in Bs; otherwise `-1` if not found.
 
 - - -
 ### str:sub(Bs, Start) -> Bs  
@@ -350,7 +349,7 @@ Return the binary substring between start and stop index, excluding stop.  The i
 Attempt to parse the leading portion of Bs as an ISO 8601, RFC 2822, or ctime() date-time string.  If time zone information is missing, then the local time zone is assumed.  `badarg` is returned if no input is consumed.
 
 - - -
-### str:to_int(Bs, Base) -> { integer(), << Rest >> } | badarg
+### str:to_int(Bs, Base) -> { integer(), << Rest >> } | {badarg, << Here >>}
 Return a tulpe of the leading parsed integer and remaining binary string.  The parsed integer string can be padded with leading zeros.  If base is zero or 16, the string may then include a '0x' prefix, and the number will be read in base 16; otherwise, a zero base is taken as 10 (decimal) unless the next character is '0', in which case it is taken as 8 (octal).  `badarg` is returned if no input is consumed.
 
 - - -
@@ -389,7 +388,7 @@ Equivalent to `sunday:search(Bs, sunday:init(Pattern, MaxErr))`.
 
 - - -
 ### sunday:search(Bs, {Pattern, MaxErr, DeltaMap}) -> Index | -1
-Generalised Boyer-Moore-Sunday approximate string matching for MaxErr mismatches.  For MaxErr=0, the program performs exact string searching.  Return the index of the first occurence of Pattern in Bs; otherwise -1 if not found.
+Generalised Boyer-Moore-Sunday approximate string matching for MaxErr mismatches.  For MaxErr=0, the program performs exact string searching.  Return the index of the first occurence of Pattern in Bs; otherwise `-1` if not found.
 
 
 References

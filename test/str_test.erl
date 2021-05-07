@@ -528,13 +528,10 @@ tr_test_() ->
 
 to_int_test_() ->
 	[
-	?_assertMatch(badarg, str:to_int(<<>>, -1)),
-	?_assertMatch(badarg, str:to_int(<<>>, 37)),
-	?_assertMatch(badarg, str:to_int(<<"123">>, -1)),
-	?_assertMatch(badarg, str:to_int(<<"123">>, 37)),
-	?_assertMatch(badarg, str:to_int(<<"no digits">>, 10)),
-	?_assertMatch(badarg, str:to_int([], 0)),
-	?_assertMatch(badarg, str:to_int(atom, 0)),
+	?_assertMatch({einval, -1}, str:to_int(<<>>, -1)),
+	?_assertMatch({einval, 1}, str:to_int(<<>>, 1)),
+	?_assertMatch({einval, 37}, str:to_int(<<>>, 37)),
+	?_assertMatch({0, <<"no digits">>}, str:to_int(<<"no digits">>, 10)),
 	?_assertMatch({2, <<>>}, str:to_int(<<"10">>, 2)),
 	?_assertMatch({9, <<>>}, str:to_int(<<"1001">>, 2)),
 	?_assertMatch({999, <<>>}, str:to_int(<<"  00999">>, 10)),
@@ -547,7 +544,8 @@ to_int_test_() ->
 	?_assertMatch({16#abcd, <<":foobar">>}, str:to_int(<<"0xAbCd:foobar">>, 0)),
 	?_assertMatch({999, <<":foobar">>}, str:to_int(<<"999:foobar">>, 0)),
 	?_assertMatch({-999, <<":foobar">>}, str:to_int(<<"-00999:foobar">>, 0)),
-	?_assertMatch({+999, <<":foobar">>}, str:to_int(<<"+00999:foobar">>, 0))
+	?_assertMatch({+999, <<":foobar">>}, str:to_int(<<"+00999:foobar">>, 0)),
+	?_assertMatch({25099060740386484597122528497517295, <<>>}, str:to_int(<<"25099060740386484597122528497517295">>, 10))
 	].
 
 iso_date_time_test_() ->
@@ -594,8 +592,6 @@ ptime_test_() ->
 	?_assertMatch({{{_,9,_},{0,0,0},_Tz}, <<>>}, str:ptime(<<"Sep">>,<<"%b">>)),
 	?_assertMatch({{{_,9,_},{0,0,0},_Tz}, <<>>}, str:ptime(<<"Sep">>,<<"%h">>)),
 	?_assertMatch({{{_,9,_},{0,0,0},_Tz}, <<>>}, str:ptime(<<"September">>,<<"%B">>)),
-	?_assertMatch({badarg, <<"xx">>}, str:ptime(<<"xx">>,<<"%C">>)),
-	?_assertMatch({{{2017,_,_},{0,0,0},_Tz}, <<>>}, str:ptime(<<"2017">>,<<"%C%y">>)),
 	?_assertMatch({{{2017,4,1},{20,35,43},_Tz}, <<>>}, str:ptime(<<"1 Apr 2017 20:35:43">>,<<"%c">>)),
 	?_assertMatch({badarg, <<"0">>}, str:ptime(<<"0">>,<<"%d">>)),
 	?_assertMatch({badarg, <<"32">>}, str:ptime(<<"32">>,<<"%d">>)),
@@ -647,7 +643,15 @@ ptime_test_() ->
 	?_assertMatch({{{2017,4,1},{18,27,0},_Tz}, <<>>}, str:ptime(<<"6:27 pm 2017-04-01">>,<<"%r %F">>)),
 	?_assertMatch({{{2017,4,1},{6,27,0},_Tz}, <<>>}, str:ptime(<<"6:27 2017-04-01">>,<<"%R %F">>)),
 
-	?_assertThrow({enotsup, $G}, str:ptime(<<"2021">>,<<"%G">>))
+	?_assertThrow({enotsup, $C}, str:ptime(<<"2021">>,<<"%C">>)),
+	?_assertThrow({enotsup, $G}, str:ptime(<<"2021">>,<<"%G">>)),
+	?_assertThrow({enotsup, $U}, str:ptime(<<"2021">>,<<"%U">>)),
+	?_assertThrow({enotsup, $u}, str:ptime(<<"2021">>,<<"%u">>)),
+	?_assertThrow({enotsup, $V}, str:ptime(<<"2021">>,<<"%V">>)),
+	?_assertThrow({enotsup, $v}, str:ptime(<<"2021">>,<<"%v">>)),
+	?_assertThrow({enotsup, $W}, str:ptime(<<"2021">>,<<"%W">>)),
+	?_assertThrow({enotsup, $w}, str:ptime(<<"2021">>,<<"%w">>)),
+	?_assertThrow({enotsup, $Z}, str:ptime(<<"2021">>,<<"%Z">>))
 	].
 
 to_date_time_test_() ->

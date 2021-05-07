@@ -28,9 +28,11 @@
 -define(LINESPACE, <<" \t">>).
 -define(WHITESPACE, <<" \t\n\r\f\v">>).
 
+-spec len(binary()) -> non_neg_integer().
 len(Bs) ->
 	byte_size(Bs).
 
+-spec at(binary(), integer()) -> badarg | byte().
 at(Bs, Index) when Index < 0 orelse byte_size(Bs) =< Index ->
 	badarg;
 at(Bs, Index) ->
@@ -45,6 +47,7 @@ at(Bs, Index) ->
 %at(<<_:8, Rest/binary>>, Index) ->
 %	at(Rest, Index-1).
 
+-spec cat(binary() | string(), binary() | string()) -> binary().
 cat(<<Bs1/binary>>, <<Bs2/binary>>) ->
 	<<Bs1/binary, Bs2/binary>>;
 cat(Str1, Str2) when is_list(Str1) andalso is_list(Str2) ->
@@ -52,6 +55,7 @@ cat(Str1, Str2) when is_list(Str1) andalso is_list(Str2) ->
 	Bs2 = list_to_binary(Str2),
 	<<Bs1/binary, Bs2/binary>>.
 
+-spec ncat(binary() | string(), binary() | string(), integer()) -> badarg | binary().
 ncat(_, _, Length) when Length < 0 ->
 	badarg;
 ncat(<<Bs1/binary>>, _, 0) ->
@@ -61,8 +65,11 @@ ncat(<<Bs1/binary>>, <<Bs2/binary>>, Length) when byte_size(Bs2) < Length ->
 ncat(<<Bs1/binary>>, <<Bs2/binary>>, Length) ->
 	<<Bs1/binary, Bs2:Length/binary>>.
 
+-spec chr(binary(), integer()) -> -1 | non_neg_integer().
 chr(<<Bs/binary>>, Ch) ->
 	chr(Bs, Ch, 0).
+
+-spec chr(binary(), integer(), integer()) -> -1 | non_neg_integer().
 chr(<<>>, _Ch, _Index) ->
 	-1;
 chr(<<Ch:8, _/binary>>, Ch, Index) ->
@@ -70,8 +77,11 @@ chr(<<Ch:8, _/binary>>, Ch, Index) ->
 chr(<<_:8, Rest/binary>>, Ch, Index) ->
 	chr(Rest, Ch, Index+1).
 
+-spec rchr(binary(), integer()) -> -1 | non_neg_integer().
 rchr(<<Bs/binary>>, Ch) ->
 	rchr(Bs, Ch, 0, -1).
+
+-spec rchr(binary(), integer(), integer(), integer()) -> -1 | non_neg_integer().
 rchr(<<>>, _, _, Last) ->
 	Last;
 rchr(<<Ch:8, Rest/binary>>, Ch, Index, _) ->
@@ -79,13 +89,17 @@ rchr(<<Ch:8, Rest/binary>>, Ch, Index, _) ->
 rchr(<<_:8, Rest/binary>>, Ch, Index, Last) ->
 	rchr(Rest, Ch, Index+1, Last).
 
+-spec rev(binary())-> binary().
 rev(<<Bs/binary>>) ->
 	rev(Bs, <<>>).
+
+-spec rev(binary(), binary())-> binary().
 rev(<<>>, Acc) ->
 	Acc;
 rev(<<Ch:8, Rest/binary>>, Acc) ->
 	rev(Rest, <<Ch, Acc/binary>>).
 
+-spec ltrim(binary()) -> binary().
 ltrim(<<>>) ->
 	<<>>;
 ltrim(<<Ch:8, Rest/binary>>) when Ch == ?SPC orelse (?TAB =< Ch andalso Ch =< ?CR) ->
@@ -93,16 +107,21 @@ ltrim(<<Ch:8, Rest/binary>>) when Ch == ?SPC orelse (?TAB =< Ch andalso Ch =< ?C
 ltrim(Rest) ->
 	Rest.
 
+-spec rtrim(binary()) -> binary().
 rtrim(<<>>) ->
 	<<>>;
 rtrim(<<Bs/binary>>) ->
 	rev(ltrim(rev(Bs))).
 
+-spec trim(binary()) -> binary().
 trim(<<Bs/binary>>) ->
 	ltrim(rtrim(Bs)).
 
+-spec spn(binary(), binary()) -> non_neg_integer().
 spn(<<Bs/binary>>, Delims) ->
 	spn(Bs, Delims, 0).
+
+-spec spn(binary(), binary(), non_neg_integer()) -> non_neg_integer().
 spn(<<>>, _Delims, Span) ->
 	Span;
 spn(<<Ch:8, Rest/binary>>, Delims, Span) ->
@@ -113,8 +132,11 @@ spn(<<Ch:8, Rest/binary>>, Delims, Span) ->
 		spn(Rest, Delims, Span+1)
 	end.
 
+-spec cspn(binary(), binary()) -> non_neg_integer().
 cspn(<<Bs/binary>>, Delims) ->
 	cspn(Bs, Delims, 0).
+
+-spec cspn(binary(), binary(), non_neg_integer()) -> non_neg_integer().
 cspn(<<>>, _Delims, Span) ->
 	Span;
 cspn(<<Ch:8, Rest/binary>>, Delims, Span) ->
@@ -125,8 +147,11 @@ cspn(<<Ch:8, Rest/binary>>, Delims, Span) ->
 		Span
 	end.
 
+-spec sub(binary(), non_neg_integer()) -> binary().
 sub(Bs, Start) ->
 	sub(Bs, Start, byte_size(Bs)).
+
+-spec sub(binary(), non_neg_integer(), non_neg_integer()) -> binary().
 sub(_Bs, Start, Stop) when Stop =< Start ->
 	<<>>;
 sub(Bs, Start, Stop) ->
@@ -147,6 +172,7 @@ sub(Bs, Start, Stop) ->
 %sub(<<_:8, Rest/binary>>, Start, Stop, Acc) ->
 %	sub(Rest, Start-1, Stop-1, Acc).
 
+-spec tok(binary(), binary()) -> {binary(), binary()}.
 tok(Bs, Delims) ->
 	% Skip leading delimiters.
 	SepLen = spn(Bs, Delims),
@@ -160,6 +186,7 @@ tok(Bs, Delims) ->
 	<<_:SepLen2/binary, Rest3/binary>> = Rest2,
 	{Token, Rest3}.
 
+-spec ncmp(binary(), binary(), non_neg_integer()) -> -1 | 0 | 1.
 ncmp(_A, _B, 0) ->
 	0;
 ncmp(<<>>, <<>>, _Length) ->
@@ -178,9 +205,11 @@ ncmp(<<Ach:8, A/binary>>, <<Bch:8, B/binary>>, Length) ->
 			1
 	end.
 
+-spec cmp(binary(), binary()) ->  -1 | 0 | 1.
 cmp(A, B) ->
 	ncmp(A, B, max(byte_size(A), byte_size(B))).
 
+-spec ncasecmp(binary(), binary(), non_neg_integer()) -> -1 | 0 | 1.
 ncasecmp(_A, _B, 0) ->
 	0;
 ncasecmp(<<>>, <<>>, _Length) ->
@@ -201,14 +230,19 @@ ncasecmp(<<Ach:8, A/binary>>, <<Bch:8, B/binary>>, Length) ->
 			1
 	end.
 
+-spec casecmp(binary(), binary()) ->  -1 | 0 | 1.
 casecmp(A, B) ->
 	ncasecmp(A, B, max(byte_size(A), byte_size(B))).
 
+-spec cpy(binary()) -> binary().
 cpy(Bs) ->
 	binary:copy(Bs).
 
+-spec ncpy(binary(), non_neg_integer()) -> binary().
 ncpy(Bs, Length) ->
 	ncpy(Bs, Length, <<>>).
+
+-spec ncpy(binary(), non_neg_integer(), binary()) -> binary().
 ncpy(_, 0, Acc) ->
 	Acc;
 ncpy(<<>>, _, Acc) ->
@@ -216,13 +250,16 @@ ncpy(<<>>, _, Acc) ->
 ncpy(<<Ch:8, Rest/binary>>, Length, Acc) ->
 	ncpy(Rest, Length-1, <<Acc/binary, Ch:8>>).
 
+-spec upper(binary()) -> binary().
 upper(Bs) ->
 	<< << (ctype:toupper(Octet)) >> || <<Octet>> <= Bs >>.
 
+-spec lower(binary()) -> binary().
 lower(Bs) ->
 	<< << (ctype:tolower(Octet)) >> || <<Octet>> <= Bs >>.
 
 %% Taken from NetBSD 7.1 man error; assumes Erlang uses errno names.
+-spec error(atom()) -> binary().
 error(eperm)		-> <<"Operation not permitted.">>;
 error(enoent)		-> <<"No such file or directory.">>;
 error(esrch)		-> <<"No such process.">>;
@@ -320,12 +357,17 @@ error(enolink)		-> <<"Link has been severed.">>;
 error(eproto)		-> <<"Protocol error.">>;
 error(Reason)		-> atom_to_binary(Reason, utf8).
 
+-spec tr(binary(), binary()) -> binary().
 tr(Bs, FromSet) ->
 	tr(Bs, FromSet, <<>>).
+
+-spec tr(binary(), binary(), binary()) -> binary().
 tr(Bs, <<>>, _ToSet) ->
 	Bs;
 tr(Bs, FromSet, ToSet) ->
 	tr(Bs, FromSet, ToSet, <<>>).
+
+-spec tr(binary(), binary(), binary(), binary()) -> binary().
 tr(<<>>, _FromSet, _ToSet, Acc) ->
 	Acc;
 tr(<<Ch:8, Rest/binary>>, FromSet, ToSet, Acc) ->
@@ -348,12 +390,15 @@ tr(<<Ch:8, Rest/binary>>, FromSet, ToSet, Acc) ->
 -define(MONTH_FULL, <<"January">>,<<"February">>,<<"March">>,<<"April">>,<<"May">>,<<"June">>,<<"July">>,<<"August">>,<<"September">>,<<"October">>,<<"November">>,<<"December">>).
 -define(MONTH_SHORT, <<"Jan">>,<<"Feb">>,<<"Mar">>,<<"Apr">>,<<"May">>,<<"Jun">>,<<"Jul">>,<<"Aug">>,<<"Sep">>,<<"Oct">>,<<"Nov">>,<<"Dec">>).
 
+-spec ftime(binary(), dtz:epochsecs() | dtz:dtz() | {dtz:date(), dtz:time()}) -> binary().
 ftime(Fmt, {Date, Time}) ->
 	ftime(Fmt, {Date, Time, dtz:time_zone_seconds()});
 ftime(Fmt, {Date, Time, Tz}) ->
 	ftime(Fmt, {Date, Time, Tz}, <<>>);
 ftime(Fmt, EpochSeconds) ->
 	ftime(Fmt, dtz:from_epoch_seconds(EpochSeconds)).
+
+-spec ftime(binary(), dtz:dtz(), binary()) -> binary().
 ftime(<<>>, _DateTime, Acc) ->
 	Acc;
 ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time, Tz}, Acc) ->
@@ -495,22 +540,26 @@ ftime(<<"%", Ch:8, Rest/binary>>, {Date, Time, Tz}, Acc) ->
 ftime(<<Ch:8, Rest/binary>>, DateTime, Acc) ->
 	ftime(Rest, DateTime, <<Acc/binary, Ch:8>>).
 
+-spec lpad(binary(), byte(), non_neg_integer()) -> binary().
 lpad(Bs, _Pad, Width) when Width =< byte_size(Bs) ->
 	Bs;
 lpad(Bs, Pad, Width) ->
 	lpad(<<Pad:8, Bs/binary>>, Pad, Width).
 
+-spec rpad(binary(), byte(), non_neg_integer()) -> binary().
 rpad(Bs, _Pad, Width) when Width =< byte_size(Bs) ->
 	Bs;
 rpad(Bs, Pad, Width) ->
 	rpad(<<Bs/binary, Pad:8>>, Pad, Width).
 
+-spec pad_int(integer(), char(), integer()) -> binary().
 pad_int(Int, $0, Width) when Int < 0 ->
 	Num = pad_int(-Int, $0, Width-1),
 	<<$-, Num/binary>>;
 pad_int(Int, Pad, Width) ->
 	lpad(integer_to_binary(Int), Pad, Width).
 
+-spec pad_sign_int(integer(), char(), integer()) -> binary().
 pad_sign_int(Int, $0, Width) when Int < 0 ->
 	Num = pad_int(-Int, $0, Width-1),
 	<<$-, Num/binary>>;
@@ -524,56 +573,63 @@ pad_sign_int(Int, Pad, Width) ->
 	Num = integer_to_binary(Int),
 	lpad(<<$+, Num/binary>>, Pad, Width).
 
-to_int(Bs, Base) when is_binary(Bs) ->
-	to_int(Bs, Base, -1);
-to_int(_Other, _Base) ->
-	badarg.
+% Similar to C's strtol().
+-spec to_int(binary(), 0 | 2..36) -> {integer(), binary()}.
+to_int(Bs, Base) ->
+	to_int(Bs, Base, -1).
 
-to_int(<<"0x", Rest/binary>>, Base, MaxDigits) when Base == 0 orelse Base == 16 ->
-	to_int(Rest, 16, MaxDigits, 0, 1, 0);
-to_int(<<"0", Rest/binary>>, 0, MaxDigits) ->
-	to_int(Rest, 8, MaxDigits, 0, 1, 0);
+-spec to_int(binary(), 0 | 2..36, pos_integer()) -> {integer(), binary()}.
 to_int(Bs, 0, MaxDigits) ->
-	to_int(Bs, 10, MaxDigits);
-to_int(<<$ , Rest/binary>>, Base, MaxDigits) ->
-	to_int(Rest, Base, MaxDigits);
-to_int(<<$-, Rest/binary>>, 10, MaxDigits) ->
-	to_int(Rest, 10, MaxDigits, 0, -1, 0);
-to_int(<<$+, Rest/binary>>, 10, MaxDigits) ->
-	to_int(Rest, 10, MaxDigits, 0, 1, 0);
+	to_int(Bs, 0, MaxDigits, 0);
+to_int(_Bs, 1, _MaxDigits) ->
+	{einval, 1};
+to_int(_Bs, Base, _MaxDigits) when Base < 0 orelse 36 < Base ->
+	{einval, Base};
 to_int(Bs, Base, MaxDigits) ->
-	to_int(Bs, Base, MaxDigits, 0, 1, 0).
+	to_int(Bs, Base, MaxDigits, 0).
 
-to_int(<<>>, _Base, _MaxDigits, _Acc, _Sign, 0) ->
-	% No digits found.
-	badarg;
-to_int(<<>>, _Base, _MaxDigits, Acc, Sign, _Ndigits) ->
-	% End of string.
+% Handle leading prefixes and/or Base = 0 conditions.
+-spec to_int(binary(), 0 | 2..36, integer(), integer()) -> {integer(), binary()}.
+to_int(<<"0x", Rest/binary>>, 16, MaxDigits, Acc) ->
+	to_int(Rest, 16, MaxDigits, Acc, 1);
+to_int(<<"0x", Rest/binary>>, 0, MaxDigits, Acc) ->
+	to_int(Rest, 16, MaxDigits, Acc, 1);
+to_int(<<"0", Rest/binary>>, 0, MaxDigits, Acc) ->
+	to_int(Rest, 8, MaxDigits, Acc, 1);
+to_int(Bs, 0, MaxDigits, Acc) ->
+	to_int(Bs, 10, MaxDigits, Acc);
+to_int(<<$ , Rest/binary>>, Base, MaxDigits, Acc) ->
+	to_int(Rest, Base, MaxDigits, Acc);
+to_int(<<$-, Rest/binary>>, 10, MaxDigits, Acc) ->
+	to_int(Rest, 10, MaxDigits, Acc, -1);
+to_int(<<$+, Rest/binary>>, 10, MaxDigits, Acc) ->
+	to_int(Rest, 10, MaxDigits, Acc, 1);
+to_int(Bs, Base, MaxDigits, Acc) ->
+	to_int(Bs, Base, MaxDigits, Acc, 1).
+
+% Parse digits.
+-spec to_int(binary(), 2..36, integer(), integer(), -1 | 1) -> {integer(), binary()}.
+to_int(<<>>, _Base, _MaxDigits, Acc, Sign) ->
 	{ Sign * Acc, <<>> };
-to_int(Bs, _Base, MaxDigits, Acc, Sign, MaxDigits) ->
-	% MaxDigits consumed.
+to_int(Bs, _Base, 0, Acc, Sign) ->
 	{ Sign * Acc, Bs };
-to_int(<<Ch:8, Rest/binary>>, Base, MaxDigits, Acc, Sign, Ndigits) ->
-	case ctype:isbase(Ch, Base) of
-	true ->
-		case ctype:isdigit(Ch) of
-		true ->
-			to_int(Rest, Base, MaxDigits, Acc * Base + (Ch - $0), Sign, Ndigits+1);
-		false ->
-			to_int(Rest, Base, MaxDigits, Acc * Base + (10 + ctype:toupper(Ch) - $A), Sign, Ndigits+1)
-		end;
-	false when 0 < Ndigits ->
-		{ Sign * Acc, <<Ch:8, Rest/binary>> };
-	false ->
-		badarg
+to_int(<<Ch:8, Rest/binary>>, Base, MaxDigits, Acc, Sign) ->
+	case {ctype:isbase(Ch, Base), ctype:isdigit(Ch)} of
+	{true, true} ->
+		to_int(Rest, Base, MaxDigits-1, Acc * Base + (Ch - $0), Sign);
+	{true, false} ->
+		to_int(Rest, Base, MaxDigits-1, Acc * Base + (10 + ctype:toupper(Ch) - $A), Sign);
+	{false, _} ->
+		{ Sign * Acc, <<Ch, Rest/binary>> }
 	end.
 
+-spec to_date_time(binary()) -> dtz:dtz() | badarg.
 to_date_time(Bs) ->
 	case iso_date_time(Bs) of
 	badarg ->
 		to_date_time(Bs, [
-			%% RFC 2822 date-time variants
-			<<"%a, %d %b %Y %H:%M:%S %z">>,	%% RFC 2822 date-time format.
+			% RFC 2822 date-time variants
+			<<"%a, %d %b %Y %H:%M:%S %z">>,	% RFC 2822 date-time format.
 			<<"%a, %d %b %Y %H:%M:%S">>,
 			<<"%a %d %b %Y %H:%M:%S %z">>,
 			<<"%a %d %b %Y %H:%M:%S">>,
@@ -585,30 +641,29 @@ to_date_time(Bs) ->
 			<<"%d %b %Y %H %M">>,
 			<<"%d %b %Y">>,
 
-			%% ctime() variants
+			% ctime() variants
 			<<"%a, %b %d %H:%M:%S %Y %z">>,
 			<<"%a, %b %d %H:%M:%S %Y">>,
 			<<"%a %b %d %H:%M:%S %Y %z">>,
-			<<"%a %b %d %H:%M:%S %Y">>,	%% ctime() format.
+			<<"%a %b %d %H:%M:%S %Y">>,	% ctime() format.
 			<<"%b %d %H:%M:%S %Y %z">>,
 			<<"%b %d %H:%M:%S %Y">>,
 
-			%% Partial date or time.
+			% Partial date or time.
+			<<"%Y/%m/%d">>,
 			<<"%b %d, %Y">>,
 			<<"%b %d %Y">>,
 %			<<"%H:%M:%S %z">>,
 			<<"%H:%M:%S">>,
 %			<<"%H:%M %z">>,
 			<<"%H:%M">>,
-%			<<"%H %M %S %z">>,
-			<<"%H %M %S">>,
-%			<<"%H %M %z">>,
-			<<"%H %M">>
+			<<"%H%M">>
 		]);
 	DateTimeTz_Rest ->
 		DateTimeTz_Rest
 	end.
 
+-spec to_date_time(binary(), [binary()]) -> {dtz:dtz(), binary} | badarg.
 to_date_time(_Bs, []) ->
 	badarg;
 to_date_time(Bs, [Fmt | Tail]) ->
@@ -616,15 +671,18 @@ to_date_time(Bs, [Fmt | Tail]) ->
 	case ptime(Bs, Fmt) of
 	{badarg, _Rest} ->
 		to_date_time(Bs, Tail);
-	DateTimeTz_Rest ->
-		DateTimeTz_Rest
+	{_Dtz, Bs} ->
+		to_date_time(Bs, Tail);
+	Result ->
+		Result
 	end.
 
 %%
 %% Parse the most common formats of ISO 8601.
 %%
-%%	YYYY[-]MM[-]DD[Thh[:]mm[:]ss[.sss][-zz[:]zz]
+%%	YYYY[-]MM[-]DD[Thh[:]mm[:]ss[.ssssss][-zz[:]zz]
 %%
+-spec iso_date_time(binary()) -> {dtz:dtz(), binary()} | badarg.
 iso_date_time(Bs) ->
 	try
 		{Date, Rest1} = iso_date(Bs),
@@ -639,6 +697,7 @@ iso_date_time(Bs) ->
 			badarg
 	end.
 
+-spec iso_date(binary()) -> {dtz:date(), binary()}.
 iso_date(<<Year:4/bytes, $-, Month:2/bytes, $-, Day:2/bytes, Rest/binary>>) ->
 	{{binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)}, Rest};
 iso_date(<<Year:4/bytes, Month:2/bytes, Day:2/bytes, Rest/binary>>) ->
@@ -646,6 +705,7 @@ iso_date(<<Year:4/bytes, Month:2/bytes, Day:2/bytes, Rest/binary>>) ->
 iso_date(_Other) ->
 	badarg.
 
+-spec iso_time(binary()) -> {dtz:time(), dtz:tz(), binary()}.
 iso_time(<<$T, Hour:2/bytes, $:, Minute:2/bytes, $:, Second:2/bytes, Rest/binary>>) ->
 	{_, Tz, Rest1} = iso_time_zone(iso_time_fraction(Rest)),
 	{ {binary_to_integer(Hour), binary_to_integer(Minute), binary_to_integer(Second)}, Tz, Rest1 };
@@ -655,6 +715,7 @@ iso_time(<<$T, Hour:2/bytes, Minute:2/bytes, Second:2/bytes, Rest/binary>>) ->
 iso_time(Other) ->
 	{{0, 0, 0}, dtz:time_zone_seconds(), Other}.
 
+-spec iso_time_fraction(binary()) -> binary().
 iso_time_fraction(<<$., Rest/binary>>) ->
 	{_, Rest1} = to_int(Rest, 10),
 	Rest1;
@@ -664,6 +725,7 @@ iso_time_fraction(<<$,, Rest/binary>>) ->
 iso_time_fraction(Other) ->
 	Other.
 
+-spec iso_time_zone(binary()) -> {ok, dtz:tz(), binary()}.
 iso_time_zone(<<>>) ->
 	% Nothing to consume, assume local time zone.
 	{ok, dtz:time_zone_seconds(), <<>>};
@@ -681,11 +743,13 @@ iso_time_zone(Other) ->
 	% No time zone parsed, assume local time zone.
 	{badarg, dtz:time_zone_seconds(), Other}.
 
+-spec ptime(binary(), binary()) -> {dtz:dtz(), binary()} | {badarg, binary()}.
 ptime(Bs, Fmt) ->
-	{Date, _Time } = calendar:local_time(),
-	ptime(Bs, Fmt, {Date, {0, 0, 0}, dtz:time_zone_seconds()}).
-ptime(Bs, <<>>, DateTimeTz) ->
-	{DateTimeTz, Bs};
+	ptime(Bs, Fmt, {{0, 0, 0}, {0, 0, 0}, dtz:time_zone_seconds()}).
+
+-spec ptime(binary(), binary(), dtz:dtz()) -> {dtz:dtz(), binary()} | {badarg, binary()}.
+ptime(Bs, <<>>, Dtz) ->
+	{Dtz, Bs};
 ptime(Bs, <<$ , Fmt/binary>>, Dtz) ->
 	ptime(ltrim(Bs), Fmt, Dtz);
 ptime(Bs, <<$\t, Fmt/binary>>, Dtz) ->
@@ -716,13 +780,16 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 		ptime(Bs, <<"%b">>, {Date, Time, Tz});
 	$c ->
 		ptime(Bs, <<"%e %b %Y %H:%M:%S">>, {Date, Time, Tz});
-	$C ->
-		case to_int(sub(Bs, 0, 2), 10) of
-		{Century, _} when 0 =< Century andalso Century =< 99 ->
-			{{{Century * 100, Month, Day}, Time, Tz}, sub(Bs, 2)};
-		_ ->
-			{badarg, Bs}
-		end;
+% 	$C ->
+% Archaic and in combo with %y (%C%y) relies on %y knowing preceeding format context.
+% 		case to_int(Bs, 10, 2) of
+% 		{0, Bs} ->
+% 			{badarg, Bs};
+% 		{Century, Rest} when 0 =< Century andalso Century =< 99 ->
+% 			{{{Century * 100, Month, Day}, Time, Tz}, Rest};
+% 		_ ->
+% 			{badarg, Bs}
+% 		end;
 	$d ->
 		case to_int(Bs, 10, 2) of
 		{NewDay, Rest} when 1 =< NewDay andalso NewDay =< 31 ->
@@ -750,7 +817,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			{badarg, Bs}
 		end;
 	$I ->
-		case to_int(Bs, 10) of
+		case to_int(Bs, 10, 2) of
 		{NewHour, Rest} when 1 =< NewHour andalso NewHour =< 12 ->
 			{{Date, {NewHour, Minute, Second}, Tz}, Rest};
 		_ ->
@@ -763,7 +830,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 	$j ->
 		case to_int(Bs, 10, 3) of
 		{DayOfYear, Rest} when 1 =< DayOfYear andalso DayOfYear =< 366 ->
-			%% Incomplete
+			% Ignored for now.
 			{{Date, Time, Tz}, Rest};
 		_ ->
 			{badarg, Bs}
@@ -804,17 +871,18 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 		ptime(Bs, <<"%H:%M">>, {Date, Time, Tz});
 	$S ->
 		case to_int(Bs, 10, 2) of
-		{NewSecond, Rest} when 0 =< NewSecond andalso NewSecond =< 61 ->
+		{NewSecond, Rest} when 0 =< NewSecond andalso NewSecond =< 60 ->
 			{{Date, {Hour, Minute, NewSecond}, Tz}, Rest};
 		_ ->
 			{badarg, Bs}
 		end;
 	$s ->
 		case to_int(Bs, 10) of
-		{Sec, Rest} ->
-			{dtz:from_epoch_seconds(Sec), Rest};
-		_ ->
-			{badarg, Bs}
+		{0, Bs} ->
+			% Nothing consumed.
+			{badarg, Bs};
+		{Esecs, Rest} ->
+			{dtz:from_epoch_seconds(Esecs), Rest}
 		end;
 	$t ->
 		Span = spn(Bs, ?WHITESPACE),
@@ -842,15 +910,11 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 		{{{NewYear, Month, Day}, Time, Tz}, Rest};
 	$y ->
 		% http://pubs.opengroup.org/onlinepubs/9699919799/
-		case to_int(sub(Bs, 0, 2), 10, 2) of
-		{Value, _} when 0 =< Value andalso Value =< 99 ->
-			NewYear = if
-			Value =< 68 -> 2000 + Value;
-			Value  > 68 -> 1900 + Value
-			end,
-			{{{NewYear, Month, Day}, Time, Tz}, sub(Bs, 2)};
-		_ ->
-			{badarg, Bs}
+		case to_int(Bs, 10, 2) of
+		{Value, Rest} when Value =< 68 ->
+			{{{2000 + Value, Month, Day}, Time, Tz}, Rest};
+		{Value, Rest} ->
+			{{{1900 + Value, Month, Day}, Time, Tz}, Rest}
 		end;
 % 	$Z ->
 % 		throw({enotsup, Ch});
@@ -863,11 +927,11 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 		end;
 	$% ->
 		<<Pct:8, Rest/binary>> = Bs,
-		if
-		Pct /= $% ->
-			{badarg, Bs};
-		Pct == $% ->
-			{{Date, Time, Tz}, Rest}
+		case Pct == $% of
+		true ->
+			{{Date, Time, Tz}, Rest};
+		false ->
+			{badarg, Bs}
 		end;
 	_ ->
 		throw({enotsup, Ch})
@@ -878,8 +942,11 @@ ptime(<<Ch:8, Rest/binary>>, <<Ch:8, Fmt/binary>>, DateTimeTz) ->
 ptime(Bs, _Fmt, _DateTimeTz) ->
 	{badarg, Bs}.
 
+-spec index_of_word(binary(), [binary()]) -> notfound | non_neg_integer().
 index_of_word(Word, List) ->
 	index_of_word(Word, List, 0).
+
+-spec index_of_word(binary(), [binary()], non_neg_integer()) -> notfound | non_neg_integer().
 index_of_word(_, [], _) ->
 	notfound;
 index_of_word(Word, [Head | Tail], Index) ->
@@ -890,8 +957,11 @@ index_of_word(Word, [Head | Tail], Index) ->
 		index_of_word(Word, Tail, Index + 1)
 	end.
 
+-spec str(binary(), binary()) -> integer().
 str(Bs, Pattern) ->
 	str(Bs, Pattern, Bs, Pattern, 0).
+
+-spec str(binary(), binary(), binary(), binary(), integer()) -> integer().
 str(_Bs, _Pattern, _, <<>>, Index) ->
 	% Reached end of pattern.
 	Index;
@@ -905,8 +975,11 @@ str(<<_:8, Rest/binary>>, Pattern, _, _, Index) ->
 	% Mismatched characters, reset pattern.
 	str(Rest, Pattern, Rest, Pattern, Index + 1).
 
+-spec casestr(binary(), binary()) -> integer().
 casestr(Bs, Pattern) ->
 	casestr(Bs, Pattern, Bs, Pattern, 0).
+
+-spec casestr(binary(), binary(), binary(), binary(), integer()) -> integer().
 casestr(_Bs, _Pattern, _, <<>>, Index) ->
 	% Reached end of pattern.
 	Index;
@@ -924,6 +997,7 @@ casestr(Bs, Pattern, <<Ach:8, Next/binary>>, <<Bch:8, Pat/binary>>, Index) ->
 			casestr(Rest, Pattern, Rest, Pattern, Index + 1)
 	end.
 
+-spec isprintable(binary()) -> boolean().
 isprintable(<<>>) ->
 	true;
 isprintable(<<Ch:8, Rest/binary>>) ->
@@ -940,10 +1014,15 @@ isprintable(_Other) ->
 -define(SQUOTE, 16#27).
 -define(BACKSLASH, 16#5C).
 
+-spec token(binary()) -> {binary(), binary()}.
 token(Bs) ->
 	token(Bs, ?WHITESPACE).
+
+-spec token(binary(), binary()) -> {binary(), binary()}.
 token(Bs, Delims) ->
 	token(Bs, Delims, <<>>).
+
+-spec token(binary(), binary(), binary()) -> {binary(), binary()}.
 token(<<>>, _Delims, Acc) ->
 	{Acc, <<>>};
 token(Bs, Delims, Acc) ->
@@ -975,6 +1054,8 @@ token(Bs, Delims, Acc) ->
 			{Acc, Rest2}
 		end
 	end.
+
+-spec token(<<_:8,_:_*8>>, binary(), ?DQUOTE|?SQUOTE, binary()) -> {binary(), binary()}.
 token(<<>>, _Delims, Quote, Acc) ->
 	throw({error, unbalanced_quotes, Quote, Acc});
 token(Bs, Delims, Quote, Acc) ->
@@ -990,10 +1071,15 @@ token(Bs, Delims, Quote, Acc) ->
 		token(Rest, Delims, Quote, <<Acc/binary, Octet:8>>)
 	end.
 
+-spec split(binary()) -> [binary()].
 split(Bs) ->
 	split(Bs, ?WHITESPACE).
+
+-spec split(binary(), binary()) -> [binary()].
 split(Bs, Delims) ->
 	split(Bs, Delims, []).
+
+-spec split(binary(), binary(), [binary()]) -> [binary()].
 split(<<>>, _Delims, Acc) ->
 	lists:reverse(Acc);
 split(Bs, Delims, Acc) ->
