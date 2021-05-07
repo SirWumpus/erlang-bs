@@ -537,7 +537,8 @@ ptime_test_() ->
 	?_assertMatch({{_,{0,0,0},-12600}, <<>>}, str:ptime(<<"-0330">>,<<"%z">>)),
 	?_assertMatch({{_,{20,35,43},_Tz}, <<" boo!">>}, str:ptime(<<"20:35:43 boo!">>,<<"%T">>)),
 	?_assertMatch({badarg, <<" boo!">>}, str:ptime(<<"20:35:43 boo!">>,<<"%T%z">>)),
-	?_assertMatch({badarg, <<" boo!">>}, str:ptime(<<"20:35:43 boo!">>,<<"%T %z">>)),
+	?_assertMatch({badarg, <<"boo!">>}, str:ptime(<<"20:35:43 boo!">>,<<"%T %z">>)),
+	?_assertMatch({badarg, <<"boo!">>}, str:ptime(<<"20:35:43   boo!">>,<<"%T\t%z">>)),
 	?_assertMatch({{_,{0,0,0},-12600}, <<" boo!">>}, str:ptime(<<"-0330 boo!">>,<<"%z">>)),
 	?_assertMatch({{_,{20,35,43},-12600}, <<" boo!">>}, str:ptime(<<"20:35:43 -0330 boo!">>,<<"%T %z">>)),
 

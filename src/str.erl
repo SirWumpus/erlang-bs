@@ -686,14 +686,10 @@ ptime(Bs, Fmt) ->
 	ptime(Bs, Fmt, {Date, {0, 0, 0}, dtz:time_zone_seconds()}).
 ptime(Bs, <<>>, DateTimeTz) ->
 	{DateTimeTz, Bs};
-ptime(Bs, <<" ", Fmt/binary>>, DateTimeTz) ->
-	Span = spn(Bs, ?WHITESPACE),
-	case ptime(sub(Bs, Span), Fmt, DateTimeTz) of
-	{badarg, _} ->
-		{badarg, Bs};
-	DateTimeTz_Rest ->
-		DateTimeTz_Rest
-	end;
+ptime(Bs, <<$ , Fmt/binary>>, Dtz) ->
+	ptime(ltrim(Bs), Fmt, Dtz);
+ptime(Bs, <<$\t, Fmt/binary>>, Dtz) ->
+	ptime(ltrim(Bs), Fmt, Dtz);
 ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, Minute, Second}, Tz}) ->
 	{ DateTimeTz, Rest1 } = case Ch of
 	$a ->
