@@ -622,7 +622,7 @@ ptime_test_() ->
 	?_assertMatch({{_,{20,35,0},_Tz}, <<>>}, str:ptime(<<"8:35 PM">>,<<"%r">>)),
 	?_assertMatch({badarg, <<"ibm">>}, str:ptime(<<"ibm">>,<<"%p">>)),
 	?_assertMatch({{_,{20,35,0},_Tz}, <<>>}, str:ptime(<<"20:35">>,<<"%R">>)),
-	?_assertMatch({{{2017,4,6},{00,55,20},0}, <<>>}, str:ptime(<<"1491440120">>,<<"%s">>)),
+	?_assertMatch({{{2017,4,5},{21,25,20},-12600}, <<>>}, str:ptime(<<"1491440120">>,<<"%s">>)),
 	?_assertMatch({badarg, <<"xyz">>}, str:ptime(<<"xyz">>,<<"%s">>)),
 	?_assertMatch({{_,{20,35,43},_Tz}, <<>>}, str:ptime(<<"20:35:43">>,<<"%T">>)),
 	?_assertMatch({badarg, <<"boo!">>}, str:ptime(<<"boo!">>,<<"%z">>)),

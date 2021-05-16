@@ -653,9 +653,9 @@ to_date_time(Bs) ->
 			<<"%Y/%m/%d">>,
 			<<"%b %d, %Y">>,
 			<<"%b %d %Y">>,
-%			<<"%H:%M:%S %z">>,
+			<<"%H:%M:%S %z">>,
 			<<"%H:%M:%S">>,
-%			<<"%H:%M %z">>,
+			<<"%H:%M %z">>,
 			<<"%H:%M">>,
 			<<"%H%M">>
 		]);
@@ -745,6 +745,7 @@ iso_time_zone(Other) ->
 
 -spec ptime(binary(), binary()) -> {dtz:dtz(), binary()} | {badarg, binary()}.
 ptime(Bs, Fmt) ->
+%	ptime(Bs, Fmt, {{0, 0, 0}, {0, 0, 0}, 0}).
 	ptime(Bs, Fmt, {{0, 0, 0}, {0, 0, 0}, dtz:time_zone_seconds()}).
 
 -spec ptime(binary(), binary(), dtz:dtz()) -> {dtz:dtz(), binary()} | {badarg, binary()}.
@@ -882,7 +883,7 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 			% Nothing consumed.
 			{badarg, Bs};
 		{Esecs, Rest} ->
-			{dtz:from_epoch_seconds(Esecs), Rest}
+			{dtz:to_local(dtz:from_epoch_seconds(Esecs)), Rest}
 		end;
 	$t ->
 		Span = spn(Bs, ?WHITESPACE),

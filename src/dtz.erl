@@ -64,7 +64,7 @@ to_local(Dtz) ->
 	{Date, Time, 0} = from_epoch_seconds(Epoch),
 	{Date, Time, time_zone_seconds()}.
 
--spec from_epoch_seconds(epochsecs()) -> dtz().
+-spec from_epoch_seconds(epochsecs()) -> utc().
 from_epoch_seconds(EpochSeconds) ->
 	Timestamp = {EpochSeconds div 1000000, EpochSeconds rem 1000000, 0},
 	{Date, Time} = calendar:now_to_universal_time(Timestamp),
