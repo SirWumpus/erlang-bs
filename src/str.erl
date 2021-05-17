@@ -28,6 +28,8 @@
 -define(LINESPACE, <<" \t">>).
 -define(WHITESPACE, <<" \t\n\r\f\v">>).
 
+-type base() :: 0..36.
+
 -spec len(binary()) -> non_neg_integer().
 len(Bs) ->
 	byte_size(Bs).
@@ -574,11 +576,11 @@ pad_sign_int(Int, Pad, Width) ->
 	lpad(<<$+, Num/binary>>, Pad, Width).
 
 % Similar to C's strtol().
--spec to_int(binary(), 0 | 2..36) -> {integer(), binary()}.
+-spec to_int(binary(), base()) -> {integer(), binary()} | {einval, base()}.
 to_int(Bs, Base) ->
 	to_int(Bs, Base, -1).
 
--spec to_int(binary(), 0 | 2..36, pos_integer()) -> {integer(), binary()}.
+-spec to_int(binary(), base(), integer()) -> {integer(), binary()} | {einval, base()}.
 to_int(Bs, 0, MaxDigits) ->
 	to_int(Bs, 0, MaxDigits, 0);
 to_int(_Bs, 1, _MaxDigits) ->
@@ -589,7 +591,7 @@ to_int(Bs, Base, MaxDigits) ->
 	to_int(Bs, Base, MaxDigits, 0).
 
 % Handle leading prefixes and/or Base = 0 conditions.
--spec to_int(binary(), 0 | 2..36, integer(), integer()) -> {integer(), binary()}.
+-spec to_int(binary(), base(), integer(), integer()) -> {integer(), binary()}.
 to_int(<<"0x", Rest/binary>>, 16, MaxDigits, Acc) ->
 	to_int(Rest, 16, MaxDigits, Acc, 1);
 to_int(<<"0x", Rest/binary>>, 0, MaxDigits, Acc) ->
@@ -608,7 +610,7 @@ to_int(Bs, Base, MaxDigits, Acc) ->
 	to_int(Bs, Base, MaxDigits, Acc, 1).
 
 % Parse digits.
--spec to_int(binary(), 2..36, integer(), integer(), -1 | 1) -> {integer(), binary()}.
+-spec to_int(binary(), base(), integer(), integer(), -1 | 1) -> {integer(), binary()}.
 to_int(<<>>, _Base, _MaxDigits, Acc, Sign) ->
 	{ Sign * Acc, <<>> };
 to_int(Bs, _Base, 0, Acc, Sign) ->
@@ -623,7 +625,7 @@ to_int(<<Ch:8, Rest/binary>>, Base, MaxDigits, Acc, Sign) ->
 		{ Sign * Acc, <<Ch, Rest/binary>> }
 	end.
 
--spec to_date_time(binary()) -> dtz:dtz() | badarg.
+-spec to_date_time(binary()) -> {dtz:dtz(), binary()} | badarg.
 to_date_time(Bs) ->
 	case iso_date_time(Bs) of
 	badarg ->
@@ -663,7 +665,7 @@ to_date_time(Bs) ->
 		DateTimeTz_Rest
 	end.
 
--spec to_date_time(binary(), [binary()]) -> {dtz:dtz(), binary} | badarg.
+-spec to_date_time(binary(), [binary()]) -> {dtz:dtz(), binary()} | badarg.
 to_date_time(_Bs, []) ->
 	badarg;
 to_date_time(Bs, [Fmt | Tail]) ->
@@ -697,7 +699,7 @@ iso_date_time(Bs) ->
 			badarg
 	end.
 
--spec iso_date(binary()) -> {dtz:date(), binary()}.
+-spec iso_date(binary()) -> {calendar:date(), binary()}.
 iso_date(<<Year:4/bytes, $-, Month:2/bytes, $-, Day:2/bytes, Rest/binary>>) ->
 	{{binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)}, Rest};
 iso_date(<<Year:4/bytes, Month:2/bytes, Day:2/bytes, Rest/binary>>) ->
@@ -705,7 +707,7 @@ iso_date(<<Year:4/bytes, Month:2/bytes, Day:2/bytes, Rest/binary>>) ->
 iso_date(_Other) ->
 	badarg.
 
--spec iso_time(binary()) -> {dtz:time(), dtz:tz(), binary()}.
+-spec iso_time(binary()) -> {calendar:time(), dtz:tz(), binary()}.
 iso_time(<<$T, Hour:2/bytes, $:, Minute:2/bytes, $:, Second:2/bytes, Rest/binary>>) ->
 	{_, Tz, Rest1} = iso_time_zone(iso_time_fraction(Rest)),
 	{ {binary_to_integer(Hour), binary_to_integer(Minute), binary_to_integer(Second)}, Tz, Rest1 };
@@ -725,7 +727,7 @@ iso_time_fraction(<<$,, Rest/binary>>) ->
 iso_time_fraction(Other) ->
 	Other.
 
--spec iso_time_zone(binary()) -> {ok, dtz:tz(), binary()}.
+-spec iso_time_zone(binary()) -> {ok | badarg, dtz:tz(), binary()}.
 iso_time_zone(<<>>) ->
 	% Nothing to consume, assume local time zone.
 	{ok, dtz:time_zone_seconds(), <<>>};
@@ -748,7 +750,7 @@ ptime(Bs, Fmt) ->
 %	ptime(Bs, Fmt, {{0, 0, 0}, {0, 0, 0}, 0}).
 	ptime(Bs, Fmt, {{0, 0, 0}, {0, 0, 0}, dtz:time_zone_seconds()}).
 
--spec ptime(binary(), binary(), dtz:dtz()) -> {dtz:dtz(), binary()} | {badarg, binary()}.
+-spec ptime(binary(), binary(), dtz:dtz0()) -> {dtz:dtz(), binary()} | {badarg, binary()}.
 ptime(Bs, <<>>, Dtz) ->
 	{Dtz, Bs};
 ptime(Bs, <<$ , Fmt/binary>>, Dtz) ->
