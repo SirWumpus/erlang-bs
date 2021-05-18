@@ -26,7 +26,10 @@ distclean: clean
 tar:
 	git archive --format tar.gz --prefix ${PROJ}/ -o ${PROJ}.tar.gz HEAD
 
-test: unit
+test: dialyzer unit
+
+dialyzer:
+	rebar3 dialyzer
 
 unit:
 	TZ=NST+03:30 rebar3 eunit --cover
