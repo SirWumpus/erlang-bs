@@ -760,14 +760,9 @@ ptime(Bs, <<$\t, Fmt/binary>>, Dtz) ->
 ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, Minute, Second}, Tz}) ->
 	{ DateTimeTz, Rest1 } = case Ch of
 	$a ->
-		Span = cspn(Bs, <<", \t\n\r\v\f">>),
-		Token = sub(Bs, 0, Span),
-		case index_of_word(Token, [?WEEK_DAYS_SHORT, ?WEEK_DAYS_FULL]) of
-		notfound ->
-			{badarg, Bs};
-		_Index ->
-			{{Date, Time, Tz}, sub(Bs, Span)}
-		end;
+		% Ignore the next word assuming its a day of the week in some locale.
+		{_Word, Rest} = tok(Bs, <<", \t\r">>),
+		{{Date, Time, Tz}, Rest};
 	$A ->
 		ptime(Bs, <<"%a">>, {Date, Time, Tz});
 	$b ->

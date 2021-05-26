@@ -583,7 +583,7 @@ ptime_test_() ->
 	?_assertMatch({{_Today,{0,0,0},_Tz}, <<>>}, str:ptime(<<"abc \t \f boo!">>,<<"abc boo!">>)),
 	?_assertMatch({{_Today,{0,0,0},_Tz}, <<"boo!">>}, str:ptime(<<" \t\fboo!">>,<<"%n">>)),
 	?_assertMatch({{_Today,{0,0,0},_Tz}, <<"boo!">>}, str:ptime(<<" \t\fboo!">>,<<"%t">>)),
-	?_assertMatch({badarg, <<"Antday">>}, str:ptime(<<"Antday">>,<<"%A">>)),
+	?_assertMatch({{{0,0,0},{0,0,0},-12600}, <<>>}, str:ptime(<<" Antday, ">>,<<"%A">>)),
 	?_assertMatch({{_,{0,0,0},_Tz}, <<>>}, str:ptime(<<"Sat">>,<<"%a">>)),
 	?_assertMatch({{_,{0,0,0},_Tz}, <<>>}, str:ptime(<<"Monday">>,<<"%A">>)),
 	?_assertMatch({{_,{0,0,0},_Tz}, <<>>}, str:ptime(<<"WED">>,<<"%a">>)),
