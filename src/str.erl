@@ -6,7 +6,7 @@
 	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
 	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2, to_int/3,
 	ptime/2, to_date_time/1, str/2, casestr/2, isprintable/1,
-	token/1, token/2, split/1, split/2
+	token/1, token/2, split/1, split/2, word/1
 ]).
 
 -ifdef(EUNIT).
@@ -761,18 +761,17 @@ ptime(Bs, <<"%", Ch:8, Fmt/binary>>, {Date = {Year, Month, Day}, Time = {Hour, M
 	{ DateTimeTz, Rest1 } = case Ch of
 	$a ->
 		% Ignore the next word assuming its a day of the week in some locale.
-		{_Word, Rest} = tok(Bs, <<", \t\r">>),
+		{_Word, Rest} = word(Bs),
 		{{Date, Time, Tz}, Rest};
 	$A ->
 		ptime(Bs, <<"%a">>, {Date, Time, Tz});
 	$b ->
-		Span = cspn(Bs, ?WHITESPACE),
-		Token = sub(Bs, 0, Span),
-		case index_of_word(Token, [?MONTH_SHORT, ?MONTH_FULL]) of
+		{Word, Rest} = word(Bs),
+		case index_of_word(Word, [?MONTH_SHORT, ?MONTH_FULL]) of
 		notfound ->
 			{badarg, Bs};
 		Index ->
-			{{{Year, Index rem 12 + 1, Day}, Time, Tz}, sub(Bs, Span)}
+			{{{Year, Index rem 12 + 1, Day}, Time, Tz}, Rest}
 		end;
 	$B ->
 		ptime(Bs, <<"%b">>, {Date, Time, Tz});
@@ -939,6 +938,21 @@ ptime(<<Ch:8, Rest/binary>>, <<Ch:8, Fmt/binary>>, DateTimeTz) ->
 	ptime(Rest, Fmt, DateTimeTz);
 ptime(Bs, _Fmt, _DateTimeTz) ->
 	{badarg, Bs}.
+
+-spec word(binary()) -> {binary(), binary()}.
+word(Bs) ->
+	word(Bs, <<>>).
+
+-spec word(binary(), binary()) -> {binary(), binary()}.
+word(<<>>, Acc) ->
+	{Acc, <<>>};
+word(<<Ch:8, Rest/binary>>, Acc) ->
+	case ctype:isalpha(Ch) orelse Ch == $_ of
+	true ->
+		word(Rest, <<Acc/binary, Ch>>);
+	false ->
+		{Acc, <<Ch, Rest/binary>>}
+	end.
 
 -spec index_of_word(binary(), [binary()]) -> notfound | non_neg_integer().
 index_of_word(Word, List) ->
