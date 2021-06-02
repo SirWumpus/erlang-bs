@@ -6,12 +6,12 @@
 	sub/3, tok/2, casecmp/2, ncasecmp/3, lower/1, upper/1, tr/2, tr/3,
 	ftime/2, lpad/3, rpad/3, pad_int/3, pad_sign_int/3, to_int/2, to_int/3,
 	ptime/2, to_date_time/1, str/2, casestr/2, isprintable/1,
-	token/1, token/2, split/1, split/2, word/1
+	token/1, token/2, split/1, split/2
 ]).
 
 -ifdef(EUNIT).
 -export([
-	iso_date_time/1, index_of_word/2
+	iso_date_time/1, index_of_word/2, matching/3
 ]).
 -endif.
 
@@ -941,15 +941,16 @@ ptime(Bs, _Fmt, _DateTimeTz) ->
 
 -spec word(binary()) -> {binary(), binary()}.
 word(Bs) ->
-	word(Bs, <<>>).
+	matching(Bs, <<>>, fun (Ch) -> ctype:isalpha(Ch) orelse Ch == $_ end).
 
--spec word(binary(), binary()) -> {binary(), binary()}.
-word(<<>>, Acc) ->
+% Don't export this yet; might want to support look ahead.
+-spec matching(binary(), binary(), fun((char()) -> boolean())) -> {binary(), binary()}.
+matching(<<>>, Acc, _MatchFun) ->
 	{Acc, <<>>};
-word(<<Ch:8, Rest/binary>>, Acc) ->
-	case ctype:isalpha(Ch) orelse Ch == $_ of
+matching(<<Ch:8, Rest/binary>>, Acc, MatchFun) ->
+	case MatchFun(Ch) of
 	true ->
-		word(Rest, <<Acc/binary, Ch>>);
+		matching(Rest, <<Acc/binary, Ch>>, MatchFun);
 	false ->
 		{Acc, <<Ch, Rest/binary>>}
 	end.
