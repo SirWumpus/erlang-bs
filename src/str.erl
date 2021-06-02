@@ -188,48 +188,41 @@ tok(Bs, Delims) ->
 	<<_:SepLen2/binary, Rest3/binary>> = Rest2,
 	{Token, Rest3}.
 
--spec ncmp(binary(), binary(), non_neg_integer()) -> -1 | 0 | 1.
+-spec ncmp(binary(), binary(), non_neg_integer()) -> integer().
 ncmp(_A, _B, 0) ->
 	0;
 ncmp(<<>>, <<>>, _Length) ->
 	0;
-ncmp(<<_Ach:8, _/binary>>, <<>>, _Length) ->
-	1;
-ncmp(<<>>, <<_Bch:8, _/binary>>, _Length) ->
-	-1;
-ncmp(<<Ach:8, A/binary>>, <<Bch:8, B/binary>>, Length) ->
-	if
-		Ach =:= Bch ->
-			ncmp(A, B, Length-1);
-		Ach < Bch ->
-			-1;
-		Ach > Bch ->
-			1
-	end.
+ncmp(<<Ach:8, _/binary>>, <<>>, _Length) ->
+	Ach;
+ncmp(<<>>, <<Bch:8, _/binary>>, _Length) ->
+	-Bch;
+ncmp(<<Ach:8, A/binary>>, <<Ach:8, B/binary>>, Length) ->
+	ncmp(A, B, Length-1);
+ncmp(<<Ach:8, _A/binary>>, <<Bch:8, _B/binary>>, _Length) ->
+	Ach - Bch.
 
 -spec cmp(binary(), binary()) ->  -1 | 0 | 1.
 cmp(A, B) ->
 	ncmp(A, B, max(byte_size(A), byte_size(B))).
 
--spec ncasecmp(binary(), binary(), non_neg_integer()) -> -1 | 0 | 1.
+-spec ncasecmp(binary(), binary(), non_neg_integer()) -> integer().
 ncasecmp(_A, _B, 0) ->
 	0;
 ncasecmp(<<>>, <<>>, _Length) ->
 	0;
-ncasecmp(<<_Ach:8, _/binary>>, <<>>, _Length) ->
-	1;
-ncasecmp(<<>>, <<_Bch:8, _/binary>>, _Length) ->
-	-1;
+ncasecmp(<<Ach:8, _/binary>>, <<>>, _Length) ->
+	Ach;
+ncasecmp(<<>>, <<Bch:8, _/binary>>, _Length) ->
+	-Bch;
 ncasecmp(<<Ach:8, A/binary>>, <<Bch:8, B/binary>>, Length) ->
 	UpperA = ctype:toupper(Ach),
 	UpperB = ctype:toupper(Bch),
-	if
-		UpperA =:= UpperB ->
-			ncasecmp(A, B, Length-1);
-		UpperA < UpperB ->
-			-1;
-		UpperA > UpperB ->
-			1
+	case UpperA == UpperB of
+	true ->
+		ncasecmp(A, B, Length-1);
+	false ->
+		UpperA - UpperB
 	end.
 
 -spec casecmp(binary(), binary()) ->  -1 | 0 | 1.

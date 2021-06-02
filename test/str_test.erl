@@ -137,8 +137,8 @@ cmp_test_() ->
 	?_assertMatch( 0, str:cmp(<<"ABC">>, <<"ABC">>)),
 	?_assertMatch(-1, str:cmp(<<"A">>, <<"B">>)),
 	?_assertMatch( 1, str:cmp(<<"B">>, <<"A">>)),
-	?_assertMatch(-1, str:cmp(<<"A">>, <<"AB">>)),
-	?_assertMatch( 1, str:cmp(<<"AB">>, <<"A">>))
+	?_assertMatch(-66, str:cmp(<<"A">>, <<"AB">>)),
+	?_assertMatch( 66, str:cmp(<<"AB">>, <<"A">>))
 	].
 
 ncmp_test_() ->
@@ -161,10 +161,10 @@ ncmp_test_() ->
 	?_assertMatch( 1, str:ncmp(<<"B">>, <<"A">>, 1)),
 	?_assertMatch( 0, str:ncmp(<<"A">>, <<"AB">>, 0)),
 	?_assertMatch( 0, str:ncmp(<<"A">>, <<"AB">>, 1)),
-	?_assertMatch(-1, str:ncmp(<<"A">>, <<"AB">>, 2)),
+	?_assertMatch(-66, str:ncmp(<<"A">>, <<"AB">>, 2)),
 	?_assertMatch( 0, str:ncmp(<<"AB">>, <<"A">>, 0)),
 	?_assertMatch( 0, str:ncmp(<<"AB">>, <<"A">>, 1)),
-	?_assertMatch( 1, str:ncmp(<<"AB">>, <<"A">>, 2))
+	?_assertMatch( 66, str:ncmp(<<"AB">>, <<"A">>, 2))
 	].
 
 cpy_test_() ->
@@ -304,8 +304,8 @@ casecmp_test_() ->
 	?_assertMatch( 0, str:casecmp(<<"aBc">>, <<"AbC">>)),
 	?_assertMatch(-1, str:casecmp(<<"A">>, <<"b">>)),
 	?_assertMatch( 1, str:casecmp(<<"b">>, <<"A">>)),
-	?_assertMatch(-1, str:casecmp(<<"A">>, <<"aB">>)),
-	?_assertMatch( 1, str:casecmp(<<"aB">>, <<"A">>))
+	?_assertMatch(-66, str:casecmp(<<"A">>, <<"aB">>)),
+	?_assertMatch( 66, str:casecmp(<<"aB">>, <<"A">>))
 	].
 
 ncasecmp_test_() ->
@@ -328,10 +328,10 @@ ncasecmp_test_() ->
 	?_assertMatch( 1, str:ncasecmp(<<"B">>, <<"A">>, 1)),
 	?_assertMatch( 0, str:ncasecmp(<<"A">>, <<"aB">>, 0)),
 	?_assertMatch( 0, str:ncasecmp(<<"A">>, <<"aB">>, 1)),
-	?_assertMatch(-1, str:ncasecmp(<<"A">>, <<"aB">>, 2)),
+	?_assertMatch(-66, str:ncasecmp(<<"A">>, <<"aB">>, 2)),
 	?_assertMatch( 0, str:ncasecmp(<<"aB">>, <<"A">>, 0)),
 	?_assertMatch( 0, str:ncasecmp(<<"aB">>, <<"A">>, 1)),
-	?_assertMatch( 1, str:ncasecmp(<<"aB">>, <<"A">>, 2))
+	?_assertMatch( 66, str:ncasecmp(<<"aB">>, <<"A">>, 2))
 	].
 
 lower_test_() ->
