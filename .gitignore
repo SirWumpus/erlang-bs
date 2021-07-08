@@ -12,6 +12,7 @@
 *.plt
 *.set.asn
 *.sq3
+*.sqlite3
 *.stackdump
 *.swo
 *.swp
