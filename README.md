@@ -204,6 +204,12 @@ Use binary string Fmt to format Date and Time into Bs.  All ordinary characters 
 True if the binary string consists only of printable characters, ie. every character is one of `ctype:isprint/1`, `ctype:isspace/1`, or ASCII control characters `BEL`, `BS`, or `ESC`.
 
 - - -
+### str:join(Ch, BsList) -> Bs
+### str:join(Delim, BsList) -> Bs
+
+Using a character or binary string as a delimeter, join all the list of binary strings together into one string.
+
+- - -
 ### str:len(Bs) -> Length
 Length of binary string.  Alias for `byte_size/1`.
 

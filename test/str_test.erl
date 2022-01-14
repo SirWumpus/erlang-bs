@@ -774,3 +774,12 @@ split_test_() ->
 	?_assertMatch([<<"ABC">>, <<"123">>, <<"XYZ">>], str:split(<<"ABC,  123;  XYZ">>, <<",;">>)),
 	?_assertMatch([<<"ABC  ">>, <<"123\t">>, <<"XYZ">>], str:split(<<"ABC  ,123\t;  XYZ">>, <<",;">>))
 	].
+join_test_() ->
+	[
+	?_assertMatch(<<>>, str:join(<<"XXX">>, [])),
+	?_assertMatch(<<"">>, str:join(<<"">>, [<<"">>, <<"">>])),
+	?_assertMatch(<<"abc">>, str:join(<<"XXX">>, [<<"abc">>])),
+	?_assertMatch(<<"XXX">>, str:join(<<"XXX">>, [<<"">>, <<"">>])),
+	?_assertMatch(<<"abcXXX123">>, str:join(<<"XXX">>, [<<"abc">>, <<"123">>])),
+	?_assertMatch(<<"abc/123/xyzzy">>, str:join($/, [<<"abc">>, <<"123">>, <<"xyzzy">>]))
+	].
